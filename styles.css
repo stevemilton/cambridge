@@ -265,11 +265,11 @@ img {
 
 .hero-sub {
     font-size: clamp(1rem, 2vw, 1.25rem);
-    color: var(--text-muted);
+    color: #cccccc;
     max-width: 600px;
     margin: 0 auto 40px;
     line-height: 1.7;
-    font-weight: 300;
+    font-weight: 400;
 }
 
 .hero-actions {
