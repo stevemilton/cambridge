@@ -1,0 +1,5 @@
+# Place at the site root (https://www.padallclub.com/robots.txt) when deployed
+User-agent: *
+Allow: /
+
+Sitemap: https://www.padallclub.com/sitemap.xml
