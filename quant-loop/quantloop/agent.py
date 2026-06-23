@@ -40,6 +40,10 @@ class LocalAgent:
             return self._alpha_research(skill, context)
         if skill.name.startswith("backtest_verification"):
             return self._verify(skill, context)
+        if skill.name.startswith("pm_estimate"):
+            return self._pm_estimate(skill, context)
+        if skill.name.startswith("pm_verification"):
+            return self._pm_verify(skill, context)
         raise ValueError(f"LocalAgent has no procedure for skill {skill.name!r}")
 
     # ---- maker: generate a signal -----------------------------------------
@@ -117,6 +121,53 @@ class LocalAgent:
             "skill": skill.name,
         }
 
+    # ---- prediction-market maker: estimate P(YES), trade the gap ----------
+
+    def _pm_estimate(self, skill: Skill, context: dict[str, Any]) -> dict[str, Any]:
+        symbol = context["symbol"]
+        price = float(context["market_price"])
+        signal = float(context.get("signal", price))  # public "research" estimate
+        cap = _rule_position_cap(skill.rules, default=0.02)
+        margin = 0.05
+
+        # Blend the market price with the (more informative) research signal.
+        fair = mathx.clamp01(0.35 * price + 0.65 * signal)
+        edge = fair - price
+        side = "yes" if edge > margin else "no" if edge < -margin else "flat"
+        return {
+            "symbol": symbol,
+            "side": side,
+            "prob_estimate": round(fair, 4),
+            "market_price": round(price, 4),
+            "edge": round(edge, 4),
+            "size": cap,
+            "skill": skill.name,
+        }
+
+    # ---- prediction-market checker: grade calibration on resolved markets --
+
+    def _pm_verify(self, skill: Skill, context: dict[str, Any]) -> dict[str, Any]:
+        estimates = context["estimates"]      # maker's P(YES) on resolved markets
+        outcomes = context["outcomes"]        # ground truth, 1/0
+        prices = context["market_prices"]     # the market's own forecast
+        thr = context["thresholds"]
+
+        n = len(outcomes)
+        maker_brier = mathx.brier_score(estimates, outcomes)
+        market_brier = mathx.brier_score(prices, outcomes)
+        checks = {
+            "sample": n >= thr["min_samples"],
+            "brier": maker_brier <= thr["max_brier"],
+            "beats_market": (market_brier - maker_brier) >= thr["min_edge_vs_market"],
+        }
+        return {
+            "verdict": "pass" if all(checks.values()) else "fail",
+            "metrics": {"maker_brier": round(maker_brier, 4),
+                        "market_brier": round(market_brier, 4), "samples": n},
+            "checks": checks,
+            "skill": skill.name,
+        }
+
 
 class ClaudeAgent:
     """A real Claude-backed worker — identical interface to LocalAgent.
@@ -167,6 +218,10 @@ class ClaudeAgent:
             return self._alpha_research(skill, context)
         if skill.name.startswith("backtest_verification"):
             return self._verify(skill, context)
+        if skill.name.startswith("pm_estimate"):
+            return self._pm_estimate(skill, context)
+        if skill.name.startswith("pm_verification"):
+            return self._pm_verify(skill, context)
         raise ValueError(f"ClaudeAgent has no procedure for skill {skill.name!r}")
 
     # ---- maker: the model decides; the code backtests --------------------
@@ -270,6 +325,74 @@ class ClaudeAgent:
             "metrics": metrics,
             "checks": checks,
             "skill": skill.name,
+        }
+
+    # ---- prediction market: the model's real edge is reading the question --
+
+    def _pm_estimate(self, skill: Skill, context: dict[str, Any]) -> dict[str, Any]:
+        price = float(context["market_price"])
+        cap = _rule_position_cap(skill.rules, default=0.02)
+        margin = 0.05
+        est = self._json_call(
+            system=skill.raw,
+            user=("Estimate the probability this event resolves YES.\n"
+                  f"Question: {context.get('question')}\n"
+                  f"Market price (its implied probability): {price}\n"
+                  f"Background research signal: {context.get('signal')}\n"
+                  "Reason about the event, then give your probability."),
+            schema={
+                "type": "object",
+                "properties": {
+                    "probability": {"type": "number"},
+                    "reasoning": {"type": "string"},
+                },
+                "required": ["probability", "reasoning"],
+                "additionalProperties": False,
+            },
+        )
+        fair = mathx.clamp01(float(est["probability"]))
+        edge = fair - price
+        side = "yes" if edge > margin else "no" if edge < -margin else "flat"
+        return {
+            "symbol": context["symbol"], "side": side,
+            "prob_estimate": round(fair, 4), "market_price": round(price, 4),
+            "edge": round(edge, 4), "size": cap,
+            "rationale": est.get("reasoning", ""), "skill": skill.name,
+        }
+
+    def _pm_verify(self, skill: Skill, context: dict[str, Any]) -> dict[str, Any]:
+        estimates, outcomes = context["estimates"], context["outcomes"]
+        prices, thr = context["market_prices"], context["thresholds"]
+        n = len(outcomes)
+        maker_brier = mathx.brier_score(estimates, outcomes)
+        market_brier = mathx.brier_score(prices, outcomes)
+        verdict = self._json_call(
+            system=skill.raw,
+            user=("Decide whether to trust this maker's forecasts. It must clear "
+                  "ALL thresholds.\n"
+                  f"Maker Brier: {maker_brier:.4f}  Market Brier: {market_brier:.4f}  "
+                  f"Resolved samples: {n}\n"
+                  f"Thresholds: {json.dumps(thr)}"),
+            schema={
+                "type": "object",
+                "properties": {
+                    "verdict": {"type": "string", "enum": ["pass", "fail"]},
+                    "reasoning": {"type": "string"},
+                },
+                "required": ["verdict", "reasoning"],
+                "additionalProperties": False,
+            },
+        )
+        checks = {
+            "sample": n >= thr["min_samples"],
+            "brier": maker_brier <= thr["max_brier"],
+            "beats_market": (market_brier - maker_brier) >= thr["min_edge_vs_market"],
+        }
+        return {
+            "verdict": verdict["verdict"], "reasoning": verdict.get("reasoning", ""),
+            "metrics": {"maker_brier": round(maker_brier, 4),
+                        "market_brier": round(market_brier, 4), "samples": n},
+            "checks": checks, "skill": skill.name,
         }
 
     # ---- the one place that talks to the API ----------------------------

@@ -60,6 +60,24 @@ def max_drawdown(rets: Sequence[float]) -> float:
     return worst
 
 
+def clamp01(p: float) -> float:
+    """Keep a probability in (0, 1) so odds/log math never blows up."""
+    return min(0.999, max(0.001, p))
+
+
+def brier_score(probs: Sequence[float], outcomes: Sequence[int]) -> float:
+    """Mean squared error of probability forecasts vs binary outcomes (0..1, lower better).
+
+    The natural accuracy metric for prediction markets: a forecast of 0.7 on an
+    event that happens scores (0.7-1)^2 = 0.09. Always-0.5 scores 0.25 — the
+    baseline a real edge must beat.
+    """
+    n = min(len(probs), len(outcomes))
+    if n == 0:
+        return 1.0
+    return sum((probs[i] - outcomes[i]) ** 2 for i in range(n)) / n
+
+
 def newey_west_tstat(rets: Sequence[float], lags: int = 4) -> float:
     """Heteroskedasticity/autocorrelation-robust t-stat of the mean return.
 

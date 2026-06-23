@@ -23,6 +23,7 @@ import shutil
 import signal
 
 from quantloop.pipeline import Pipeline
+from quantloop.prediction import PredictionPipeline
 from quantloop.stages.risk import monitor_risk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -61,29 +62,55 @@ def _fresh_state_dir() -> str:
     return d
 
 
-def serve_forever(pipe: Pipeline, tick: str, ingest_interval: str, risk_interval: str) -> None:
-    """Run the loop continuously against the wall clock until SIGINT/SIGTERM.
+def _run_daemon(engine) -> None:
+    """Install signal handlers and run an engine forever until SIGINT/SIGTERM.
 
-    This is the daemon: it never exits on its own. Point a process manager
-    (systemd, Docker `restart: always`) at `python3 run.py --serve` and it keeps
-    running — and keeps its memory — across restarts, because the state dir is
-    persisted (not wiped). Stop with Ctrl-C locally or `systemctl stop` on a box.
+    The daemon never exits on its own. Point a process manager (systemd, Docker
+    `restart: always`) at `--serve` and it keeps running — and keeps its memory —
+    across restarts, because the state dir is persisted. SIGINT/SIGTERM finish
+    the current cycle, then exit cleanly.
     """
-    pipe.log = lambda msg: print(msg, flush=True)  # flush so journalctl shows logs live
-    engine = pipe.serve(tick=tick, ingest_interval=ingest_interval, risk_interval=risk_interval)
-
     def _shutdown(signum, _frame):
         print(f"\n[run] received signal {signum}; finishing current cycle then exiting")
         engine.stop()
 
     signal.signal(signal.SIGINT, _shutdown)
     signal.signal(signal.SIGTERM, _shutdown)
-
-    print(f" mode     : SERVE (continuous) — tick={tick}, ingest every {ingest_interval}, "
-          f"risk every {risk_interval}")
-    print(f" stop with: Ctrl-C  (or `systemctl stop quant-loop` on a server)")
+    print(" stop with: Ctrl-C  (or `systemctl stop quant-loop` on a server)")
     print("-" * 70)
     engine.run(max_cycles=None, real_time=True)
+
+
+def serve_forever(pipe: Pipeline, tick: str, ingest_interval: str, risk_interval: str) -> None:
+    pipe.log = lambda msg: print(msg, flush=True)  # flush so journalctl shows logs live
+    engine = pipe.serve(tick=tick, ingest_interval=ingest_interval, risk_interval=risk_interval)
+    print(f" mode     : SERVE (continuous) — tick={tick}, ingest every {ingest_interval}, "
+          f"risk every {risk_interval}")
+    _run_daemon(engine)
+
+
+def run_prediction(args, backend: str, state_dir: str) -> None:
+    """Run the prediction-market loop (estimate P(YES), Brier-verified)."""
+    pipe = PredictionPipeline(state_dir=state_dir, seed=args.seed, backend=backend)
+    print("=" * 70)
+    print(" Autonomous PREDICTION-MARKET loop — estimate P(YES), trade the gap")
+    print("=" * 70)
+    print(f" backend  : {backend}" + (f" (maker={pipe.maker_model}, checker={pipe.checker_model})"
+                                       if backend == "claude" else " (offline, deterministic)"))
+    print(" skills   : pm_estimate (maker), pm_verification (checker, Brier-graded)")
+    print(f" limits   : position {pipe.max_position:.0%}, drawdown kill {pipe.max_drawdown:.0%}")
+    print("-" * 70)
+    if args.serve:
+        pipe.log = lambda msg: print(msg, flush=True)
+        engine = pipe.build_engine(tick=args.tick, interval=args.ingest_every)
+        print(f" mode     : SERVE (continuous) — tick={args.tick}, cycle every {args.ingest_every}")
+        _run_daemon(engine)
+    else:
+        pipe.run(cycles=args.cycles)
+    print("-" * 70)
+    print(f" journal  : {os.path.relpath(pipe.state.journal, HERE)}")
+    print(f" lessons  : {os.path.relpath(pipe.estimate_skill.path, HERE)}")
+    print("=" * 70)
 
 
 def main() -> None:
@@ -96,6 +123,8 @@ def main() -> None:
                     help="force a drawdown breach to show the kill switch + lesson write-back")
     ap.add_argument("--claude", action="store_true",
                     help="use real Claude models (Sonnet maker, Opus checker); needs anthropic + API key")
+    ap.add_argument("--pm", action="store_true",
+                    help="run the prediction-market loop (estimate P(YES), Brier-verified) instead of the price loop")
     ap.add_argument("--serve", action="store_true",
                     help="run continuously against the wall clock (the daemon); persists state")
     ap.add_argument("--tick", default="2s", help="serve: engine heartbeat granularity (e.g. 1m)")
@@ -107,6 +136,11 @@ def main() -> None:
     backend = "claude" if args.claude else "local"
     # The daemon persists state across restarts; demos start from a clean slate.
     state_dir = os.path.join(HERE, "state") if args.serve else _fresh_state_dir()
+
+    if args.pm:
+        run_prediction(args, backend, state_dir)
+        return
+
     pipe = Pipeline(state_dir=state_dir, seed=args.seed, backend=backend)
 
     print("=" * 70)

@@ -19,7 +19,8 @@ python3 run.py --engine    # the event-driven automation flavour
 python3 run.py --goal 1.5  # /goal: iterate until verified Sharpe >= 1.5
 python3 run.py --stress    # force a drawdown breach: kill switch + lesson write-back
 python3 run.py --claude    # run the maker/checker on real Claude models (see below)
-python3 tests/test_loop.py && python3 tests/test_pipeline.py   # the tests
+python3 run.py --pm --cycles 12   # the prediction-market loop (estimate P(YES), Brier-verified)
+python3 tests/test_loop.py && python3 tests/test_pipeline.py && python3 tests/test_prediction.py
 ```
 
 By default everything runs on `LocalAgent` (offline, deterministic). Add
@@ -49,6 +50,27 @@ Docker, see [`deploy/`](deploy/README.md).
 > *simulated* market and a *mock* broker — safe to leave on, but not trading
 > anything real. [`CONNECTORS.md`](CONNECTORS.md) is the exact guide to swapping
 > in a real data feed and broker (with provider options), in safe stages.
+
+## Prediction markets (`--pm`)
+
+There's a second loop better suited to an LLM maker: **prediction markets**,
+where each market is a natural-language question priced as a probability that
+resolves to a known YES/NO. `python3 run.py --pm` runs it. What changes:
+
+- **maker** estimates P(YES) and trades only the *gap* to the market price —
+  reading the question is the edge, which is exactly what `ClaudeAgent` is for
+  (a price-momentum model has nothing to offer here).
+- **verifier** grades the maker on *resolved* markets with a **Brier score** —
+  real ground truth, not a noisy price Sharpe — and only passes if the maker is
+  calibrated *and* beats the market's own forecast.
+- **resolution = labelled feedback**, so the lessons file learns from
+  unambiguous outcomes.
+
+It runs offline on the simulated `SimPredictionMarketConnector` (markets that
+carry a question, a drifting price, and a resolution). To go live on a UK-legal
+venue, [`BETFAIR.md`](BETFAIR.md) maps the loop onto Betfair Exchange (back/lay
+odds ↔ probability) with a connector skeleton in
+`quantloop/connectors/betfair.py`.
 
 ## The six pieces
 
