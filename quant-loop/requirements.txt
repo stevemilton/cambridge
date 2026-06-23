@@ -1,5 +1,9 @@
-# The reference loop runs with the Python standard library only — no install needed.
+# The reference loop runs with the Python standard library only (backend="local").
+# No install needed for `python3 run.py`.
 #
-# Optional extras for plugging in real models / data / brokers:
-#   anthropic>=0.40    # to back ClaudeAgent (the maker/checker) with a real model
-#   numpy, pandas      # if you replace quantloop.mathx with vectorised math
+# For the real-model backend (`python3 run.py --claude`), install the Anthropic SDK
+# and set ANTHROPIC_API_KEY:
+#   anthropic>=0.40    # backs ClaudeAgent (Sonnet maker, Opus checker)
+#
+# Optional, only if you replace quantloop.mathx with vectorised math:
+#   numpy, pandas

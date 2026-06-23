@@ -18,8 +18,16 @@ python3 run.py             # 6 full cycles, synchronous (the simplest view)
 python3 run.py --engine    # the event-driven automation flavour
 python3 run.py --goal 1.5  # /goal: iterate until verified Sharpe >= 1.5
 python3 run.py --stress    # force a drawdown breach: kill switch + lesson write-back
+python3 run.py --claude    # run the maker/checker on real Claude models (see below)
 python3 tests/test_loop.py && python3 tests/test_pipeline.py   # the tests
 ```
+
+By default everything runs on `LocalAgent` (offline, deterministic). Add
+`--claude` to run the maker on **Claude Sonnet** and the checker on **Claude
+Opus** — `pip install anthropic` and set `ANTHROPIC_API_KEY` first. The model
+makes the *decision* (direction, trend-vs-revert, lookback; pass/fail verdict);
+the deterministic backtest in `quantloop/mathx.py` computes the numbers — an LLM
+shouldn't do arithmetic on a price series. See `quantloop/agent.py::ClaudeAgent`.
 
 ## The six pieces
 
@@ -59,11 +67,10 @@ ingest  ──>  signal  ──>  verify  ──>  execute  ──>  risk  ─�
 
 The worker that wrote the signal is the worst judge of whether it is real alpha
 or noise. So `Pipeline` constructs two agents and a `Verifier` that only ever
-sees the out-of-sample returns — never the maker's reasoning. In production you
-would point the checker at a *stronger* model than the maker (e.g. Opus checks,
+sees the out-of-sample returns — never the maker's reasoning. The `claude`
+backend points the checker at a *stronger* model than the maker (Opus checks,
 Sonnet makes); different architectures catch different errors, the same logic
-ensemble methods use. See `quantloop/agent.py::ClaudeAgent` for where a real
-model drops in.
+ensemble methods use. See `quantloop/agent.py::ClaudeAgent`.
 
 ## Stop conditions you can trust
 
@@ -79,7 +86,7 @@ A loop without a real stopping condition fails quietly — the worker claims it 
 
 | Replace | With | How |
 |---------|------|-----|
-| `LocalAgent` | `ClaudeAgent` | Implement `run_skill`: send `skill.raw` as the system prompt, `context` as the message, parse the JSON reply. |
+| `LocalAgent` | `ClaudeAgent` | Already implemented — run `Pipeline(backend="claude")` or `python3 run.py --claude` (Sonnet maker, Opus checker). |
 | `MarketDataConnector` | your data vendor | Keep the `fetch()` return shape; back it with an MCP connector. |
 | `BrokerConnector` | your broker/exchange | Keep `send_orders` / `get_positions` / `close_all`; back it with an MCP connector. |
 | virtual clock | cron / webhook | Run `engine.run(real_time=True)`, or trigger one `pipeline.run_once()` per fire. |

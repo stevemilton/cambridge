@@ -20,7 +20,7 @@ behind the same interfaces (see quantloop.agent and quantloop.connectors).
 from .loop import LoopEngine, parse_interval
 from .state import State
 from .skills import Skill, load_skill
-from .agent import Agent, LocalAgent
+from .agent import Agent, LocalAgent, ClaudeAgent
 
 __all__ = [
     "LoopEngine",
@@ -30,6 +30,7 @@ __all__ = [
     "load_skill",
     "Agent",
     "LocalAgent",
+    "ClaudeAgent",
 ]
 
 __version__ = "0.1.0"

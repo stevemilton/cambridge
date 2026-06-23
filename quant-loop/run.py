@@ -65,15 +65,20 @@ def main() -> None:
                     help="run a /goal loop until verified Sharpe reaches SHARPE")
     ap.add_argument("--stress", action="store_true",
                     help="force a drawdown breach to show the kill switch + lesson write-back")
+    ap.add_argument("--claude", action="store_true",
+                    help="use real Claude models (Sonnet maker, Opus checker); needs anthropic + API key")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
 
-    pipe = Pipeline(state_dir=_fresh_state_dir(), seed=args.seed)
+    backend = "claude" if args.claude else "local"
+    pipe = Pipeline(state_dir=_fresh_state_dir(), seed=args.seed, backend=backend)
 
     print("=" * 70)
     print(" Autonomous quant trading loop — six pieces, five stages")
     print("=" * 70)
     print(f" universe : {', '.join(pipe.universe)}")
+    print(f" backend  : {backend}" + (f" (maker={pipe.maker_model}, checker={pipe.checker_model})"
+                                       if backend == "claude" else " (offline, deterministic)"))
     print(f" skills   : alpha_research (maker), backtest_verification (checker)")
     print(f" limits   : position {pipe.max_position:.0%}, drawdown kill {pipe.max_drawdown:.0%}")
     print("-" * 70)

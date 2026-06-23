@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any, Callable
 
-from .agent import Agent, LocalAgent
+from .agent import Agent, ClaudeAgent, LocalAgent
 from .connectors import BrokerConnector, MarketDataConnector
 from .loop import LoopEngine
 from .skills import Skill, load_skill
@@ -49,6 +49,9 @@ class Pipeline:
     lookback: int = 180
     seed: int = 7
     skills_dir: str = SKILLS_DIR
+    backend: str = "local"  # "local" (offline, deterministic) or "claude" (real models)
+    maker_model: str = "claude-sonnet-4-6"   # cheaper model proposes
+    checker_model: str = "claude-opus-4-8"   # stronger model verifies
     log: Callable[[str], None] = print
 
     def __post_init__(self) -> None:
@@ -57,10 +60,17 @@ class Pipeline:
         self.data = MarketDataConnector(self.universe, seed=self.seed)
         self.broker = BrokerConnector(capital=self.capital, max_position=self.max_position)
 
-        # Maker and checker are deliberately *different* agent instances. Swap the
-        # checker for a stronger model in production (e.g. Opus checks, Sonnet makes).
-        self.maker: Agent = LocalAgent(name="maker")
-        self.checker: Agent = LocalAgent(name="checker")
+        # Maker and checker are deliberately *different* agent instances. With the
+        # "claude" backend the checker runs a stronger model than the maker
+        # (Opus checks, Sonnet makes) — the article's ensemble logic, made real.
+        if self.backend == "claude":
+            self.maker: Agent = ClaudeAgent(self.maker_model)
+            self.checker: Agent = ClaudeAgent(self.checker_model)
+        elif self.backend == "local":
+            self.maker = LocalAgent(name="maker")
+            self.checker = LocalAgent(name="checker")
+        else:
+            raise ValueError(f"unknown backend {self.backend!r} (use 'local' or 'claude')")
 
         # Operate on a working copy of the skills under state/ so the loop's
         # self-improvement (lessons written back) persists across runs without
