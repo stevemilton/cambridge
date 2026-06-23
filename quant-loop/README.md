@@ -72,6 +72,23 @@ venue, [`BETFAIR.md`](BETFAIR.md) maps the loop onto Betfair Exchange (back/lay
 odds ↔ probability) with a connector skeleton in
 `quantloop/connectors/betfair.py`.
 
+### Step 0: prove the edge first (`forecast.py`)
+
+A loop only deserves capital once you've shown you can forecast a niche better
+than the market. The **forecasting journal** measures that for £0 — no venue, no
+money:
+
+```bash
+python3 forecast.py add "Will Film X open #1?" 70% 55% --category box-office
+python3 forecast.py resolve F001 yes
+python3 forecast.py score      # YOUR Brier vs the MARKET's — the honest verdict
+```
+
+It scores your probability forecasts against the market's over real, resolved
+markets — the same Brier gate the loop's verifier enforces, run by hand first.
+See [`JOURNAL.md`](JOURNAL.md). Most niches won't pass; finding the one that does
+is the actual work.
+
 ## The six pieces
 
 | # | Piece | Where it lives | What it does |
