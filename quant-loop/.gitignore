@@ -1,0 +1,5 @@
+# Generated run artifacts (journal, JSON handoffs, working skill copies)
+state/
+.worktrees/
+__pycache__/
+*.pyc

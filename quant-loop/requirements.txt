@@ -1,0 +1,5 @@
+# The reference loop runs with the Python standard library only — no install needed.
+#
+# Optional extras for plugging in real models / data / brokers:
+#   anthropic>=0.40    # to back ClaudeAgent (the maker/checker) with a real model
+#   numpy, pandas      # if you replace quantloop.mathx with vectorised math
