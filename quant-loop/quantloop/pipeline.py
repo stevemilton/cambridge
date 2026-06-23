@@ -111,15 +111,23 @@ class Pipeline:
 
     # ---- the event-driven automation flavour -------------------------------
 
-    def build_engine(self, tick: str = "1m") -> LoopEngine:
+    def build_engine(self, tick: str = "1m", ingest_interval: str | None = None,
+                     risk_interval: str | None = None) -> LoopEngine:
         """Express the five stages as the article's automations on a LoopEngine.
 
         Ingest is the heartbeat; it emits `data_updated`. Signal/verify/execute are
         trigger-driven and chain via events. Risk is a parallel interval monitor.
+
+        `tick` is the engine's time granularity. `ingest_interval` and
+        `risk_interval` default to `tick`; in production set them to the article's
+        cadences (ingest "1h", risk "1m") so data pulls and risk checks run at
+        different rates on the same loop.
         """
+        ingest_interval = ingest_interval or tick
+        risk_interval = risk_interval or tick
         engine = LoopEngine(tick=tick, logger=self.log)
 
-        @engine.loop(interval=tick, name="ingest")
+        @engine.loop(interval=ingest_interval, name="ingest")
         def _ingest():
             self._cycle += 1
             ingest(self.state, self.data, lookback=self.lookback)
@@ -139,12 +147,22 @@ class Pipeline:
         def _execute():
             execute(self.state, self.broker)
 
-        @engine.loop(interval=tick, name="risk")
+        @engine.loop(interval=risk_interval, name="risk")
         def _risk():
             monitor_risk(self.state, self.broker, self.max_drawdown,
                          alpha_skill=self.alpha_skill, on=self._stamp_date())
 
         return engine
+
+    def serve(self, tick: str = "1m", ingest_interval: str = "1h",
+              risk_interval: str = "1m") -> LoopEngine:
+        """Build the engine for continuous, wall-clock operation (the daemon).
+
+        Returns the engine without starting it so the caller can install signal
+        handlers, then call `engine.run(max_cycles=None, real_time=True)`.
+        """
+        return self.build_engine(tick=tick, ingest_interval=ingest_interval,
+                                 risk_interval=risk_interval)
 
     # ---- a /goal example: iterate until a *checkable* Sharpe is reached -----
 

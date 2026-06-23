@@ -7,9 +7,12 @@ Examples
     python3 run.py --engine        # the event-driven automation flavour
     python3 run.py --goal 1.5      # /goal: iterate until verified Sharpe >= 1.5
     python3 run.py --cycles 20      # more cycles
+    python3 run.py --serve         # run forever (fast clock, for a local smoke test)
+    python3 run.py --serve --tick 1m --ingest-every 1h --risk-every 1m   # production cadence
 
 After any run, read state/STATE.md to see the loop's durable memory, and
-skills/alpha_research.md to see any lessons the risk monitor wrote back.
+state/skills/alpha_research.md to see any lessons the risk monitor wrote back.
+`--serve` persists that state across restarts; the other modes start fresh.
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import signal
 
 from quantloop.pipeline import Pipeline
 from quantloop.stages.risk import monitor_risk
@@ -57,6 +61,31 @@ def _fresh_state_dir() -> str:
     return d
 
 
+def serve_forever(pipe: Pipeline, tick: str, ingest_interval: str, risk_interval: str) -> None:
+    """Run the loop continuously against the wall clock until SIGINT/SIGTERM.
+
+    This is the daemon: it never exits on its own. Point a process manager
+    (systemd, Docker `restart: always`) at `python3 run.py --serve` and it keeps
+    running — and keeps its memory — across restarts, because the state dir is
+    persisted (not wiped). Stop with Ctrl-C locally or `systemctl stop` on a box.
+    """
+    pipe.log = lambda msg: print(msg, flush=True)  # flush so journalctl shows logs live
+    engine = pipe.serve(tick=tick, ingest_interval=ingest_interval, risk_interval=risk_interval)
+
+    def _shutdown(signum, _frame):
+        print(f"\n[run] received signal {signum}; finishing current cycle then exiting")
+        engine.stop()
+
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
+
+    print(f" mode     : SERVE (continuous) — tick={tick}, ingest every {ingest_interval}, "
+          f"risk every {risk_interval}")
+    print(f" stop with: Ctrl-C  (or `systemctl stop quant-loop` on a server)")
+    print("-" * 70)
+    engine.run(max_cycles=None, real_time=True)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Autonomous quant trading loop")
     ap.add_argument("--cycles", type=int, default=6, help="number of trading cycles")
@@ -67,11 +96,18 @@ def main() -> None:
                     help="force a drawdown breach to show the kill switch + lesson write-back")
     ap.add_argument("--claude", action="store_true",
                     help="use real Claude models (Sonnet maker, Opus checker); needs anthropic + API key")
+    ap.add_argument("--serve", action="store_true",
+                    help="run continuously against the wall clock (the daemon); persists state")
+    ap.add_argument("--tick", default="2s", help="serve: engine heartbeat granularity (e.g. 1m)")
+    ap.add_argument("--ingest-every", default="6s", help="serve: data-pull cadence (e.g. 1h)")
+    ap.add_argument("--risk-every", default="2s", help="serve: risk-check cadence (e.g. 1m)")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
 
     backend = "claude" if args.claude else "local"
-    pipe = Pipeline(state_dir=_fresh_state_dir(), seed=args.seed, backend=backend)
+    # The daemon persists state across restarts; demos start from a clean slate.
+    state_dir = os.path.join(HERE, "state") if args.serve else _fresh_state_dir()
+    pipe = Pipeline(state_dir=state_dir, seed=args.seed, backend=backend)
 
     print("=" * 70)
     print(" Autonomous quant trading loop — six pieces, five stages")
@@ -83,7 +119,10 @@ def main() -> None:
     print(f" limits   : position {pipe.max_position:.0%}, drawdown kill {pipe.max_drawdown:.0%}")
     print("-" * 70)
 
-    if args.stress:
+    if args.serve:
+        serve_forever(pipe, tick=args.tick, ingest_interval=args.ingest_every,
+                      risk_interval=args.risk_every)
+    elif args.stress:
         stress_demo(pipe)
     elif args.goal is not None:
         engine = pipe.research_goal_engine(target_sharpe=args.goal)

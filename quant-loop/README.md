@@ -29,6 +29,27 @@ makes the *decision* (direction, trend-vs-revert, lookback; pass/fail verdict);
 the deterministic backtest in `quantloop/mathx.py` computes the numbers — an LLM
 shouldn't do arithmetic on a price series. See `quantloop/agent.py::ClaudeAgent`.
 
+## Demo vs daemon
+
+The commands above are **bounded** — they run a handful of cycles on a simulated
+clock and exit. To run **continuously** (the "keeps running after the laptop is
+closed" part of the article), use `--serve`:
+
+```bash
+python3 run.py --serve                                    # fast clock — local smoke test
+python3 run.py --serve --tick 1m --ingest-every 1h --risk-every 1m   # production cadence
+```
+
+`--serve` loops forever against the wall clock, persists its state across
+restarts, and shuts down cleanly on Ctrl-C / SIGTERM (it finishes the current
+cycle first). To run it on a server (Hetzner or any Linux box) under systemd or
+Docker, see [`deploy/`](deploy/README.md).
+
+> **It is still a demo until you wire real connectors.** `--serve` runs against a
+> *simulated* market and a *mock* broker — safe to leave on, but not trading
+> anything real. [`CONNECTORS.md`](CONNECTORS.md) is the exact guide to swapping
+> in a real data feed and broker (with provider options), in safe stages.
+
 ## The six pieces
 
 | # | Piece | Where it lives | What it does |

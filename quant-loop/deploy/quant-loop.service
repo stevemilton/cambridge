@@ -1,0 +1,32 @@
+# systemd unit for the continuous quant-loop daemon.
+#
+# Install:
+#   sudo cp deploy/quant-loop.service /etc/systemd/system/quant-loop.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now quant-loop
+#   journalctl -u quant-loop -f          # watch it live
+#
+# Edit User=, WorkingDirectory=, and ExecStart= to match your box.
+
+[Unit]
+Description=Autonomous quant trading loop (quant-loop daemon)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=quant
+WorkingDirectory=/opt/quant-loop
+# Production cadence: pull data hourly, check risk every minute.
+# Add --claude to run the maker/checker on real models (needs ANTHROPIC_API_KEY in the .env below).
+ExecStart=/usr/bin/python3 run.py --serve --tick 1m --ingest-every 1h --risk-every 1m
+Restart=always
+RestartSec=5
+# Live logs in journalctl, and a clean SIGTERM shutdown that finishes the current cycle.
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/opt/quant-loop/.env
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

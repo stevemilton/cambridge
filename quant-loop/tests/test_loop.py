@@ -61,6 +61,21 @@ def test_goal_stops_when_condition_verified():
     assert progress["n"] == 3  # stops the moment the checked condition is met
 
 
+def test_unbounded_run_honours_stop():
+    # max_cycles=None runs forever; stop() must end it cleanly (the daemon path).
+    engine = LoopEngine(tick="1s", logger=lambda _: None)
+    hits = {"n": 0}
+
+    @engine.loop(interval="1s")
+    def beat():
+        hits["n"] += 1
+        if hits["n"] >= 5:
+            engine.stop()
+
+    engine.run(max_cycles=None, real_time=False)
+    assert hits["n"] == 5
+
+
 def test_goal_respects_max_iterations():
     engine = LoopEngine(tick="1m", logger=lambda _: None)
     runs = {"n": 0}

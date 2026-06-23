@@ -76,6 +76,15 @@ class LoopEngine:
         self.tasks: list[Task] = []
         self._pending_events: list[str] = []
         self._log = logger or (lambda msg: print(msg))
+        self._stop = False
+
+    def stop(self) -> None:
+        """Request a clean shutdown; the run loop exits after the current cycle.
+
+        Safe to call from a signal handler — daemons wire SIGINT/SIGTERM here so
+        the loop finishes the cycle it's in and never leaves a half-run trade.
+        """
+        self._stop = True
 
     # ---- registration (the decorators) -----------------------------------
 
@@ -128,21 +137,47 @@ class LoopEngine:
 
     # ---- the run loop ------------------------------------------------------
 
-    def run(self, max_cycles: int = 50, real_time: bool = False) -> None:
-        """Advance the loop. Stops when all goals are met or `max_cycles` is hit."""
-        for cycle in range(1, max_cycles + 1):
+    def run(self, max_cycles: int | None = 50, real_time: bool = False) -> None:
+        """Advance the loop.
+
+        Stops when all goals are met, `stop()` is called, or `max_cycles` is hit.
+        Pass `max_cycles=None` with `real_time=True` to run forever against the
+        wall clock — the daemon mode that keeps printing alpha after the laptop
+        is closed.
+        """
+        self._stop = False
+        cycle = 0
+        while max_cycles is None or cycle < max_cycles:
+            cycle += 1
             events, self._pending_events = self._pending_events, []
             self._step(cycle, events)
 
             if self._all_goals_done():
                 self._log(f"[engine] all goals satisfied after {cycle} cycle(s); loop exits cleanly")
                 return
+            if self._stop:
+                self._log(f"[engine] stop requested after {cycle} cycle(s); shutting down cleanly")
+                return
 
             self.now += self.tick
-            if real_time:
-                time.sleep(self.tick)
+            if real_time and not self._sleep(self.tick):
+                self._log(f"[engine] interrupted during sleep after {cycle} cycle(s); shutting down")
+                return
 
         self._log(f"[engine] reached max_cycles={max_cycles}; stopping")
+
+    def _sleep(self, seconds: float) -> bool:
+        """Sleep in small slices so a stop request is honoured promptly.
+
+        Returns False if a stop was requested mid-sleep, True otherwise.
+        """
+        remaining = seconds
+        while remaining > 0:
+            if self._stop:
+                return False
+            time.sleep(min(1.0, remaining))
+            remaining -= 1.0
+        return not self._stop
 
     def _step(self, cycle: int, events: list[str]) -> None:
         for task in self.tasks:
