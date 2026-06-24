@@ -84,7 +84,22 @@ python3 dashboard.py        # then open http://127.0.0.1:8765
 
 Add forecasts, resolve them with a click, and watch your Brier-vs-market edge,
 calibration, and per-category breakdown update live. It reads/writes the same
-`forecasts.json` as the CLI, so the two interchange. The CLI does the same:
+`forecasts.json` as the CLI, so the two interchange.
+
+**Optional — pull live odds from Betfair (read-only, never bets).** Set three
+env vars and the dashboard's "Import from Betfair" panel can search markets and
+fill the form with the current best-back odds:
+
+```bash
+export BETFAIR_APP_KEY=...      # your Betfair Application Key
+export BETFAIR_USERNAME=...     # your Betfair login
+export BETFAIR_PASSWORD=...     # kept local; never written to disk or git
+python3 dashboard.py
+```
+
+It only reads `listMarketCatalogue` / `listMarketBook` — there is no
+order-placement code. Betting stays gated until the journal proves an edge. The
+CLI does the same logging without the UI:
 
 ```bash
 python3 forecast.py add "Will Film X open #1?" 70% 55% --category box-office

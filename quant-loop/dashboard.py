@@ -14,9 +14,24 @@ import argparse
 import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
 
 from quantloop.journal import Journal
 from quantloop.webapi import dispatch
+from quantloop.connectors.betfair_read import BetfairReadClient
+
+_BETFAIR = {"client": None, "tried": False}
+
+
+def _betfair_client():
+    """Lazily build the read-only Betfair client from env vars (cached)."""
+    if not _BETFAIR["tried"]:
+        _BETFAIR["tried"] = True
+        try:
+            _BETFAIR["client"] = BetfairReadClient.from_env()
+        except Exception:
+            _BETFAIR["client"] = None
+    return _BETFAIR["client"]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PATH = os.path.join(HERE, "forecasts.json")
@@ -66,6 +81,16 @@ PAGE = """<!doctype html>
   <div class="sub">Log your probability vs the market. Beat it over ~20+ markets and you have an edge.</div>
 </header>
 <main>
+  <div class="card">
+    <h2>Import from Betfair (read-only)</h2>
+    <div style="display:flex; gap:10px">
+      <input id="bfq" placeholder="search markets, e.g. World Cup" style="flex:1">
+      <button class="primary sm" style="width:auto" onclick="betfairSearch()">Search</button>
+    </div>
+    <div id="bfresults" style="margin-top:12px"></div>
+    <div class="sub" style="margin-top:8px">Pulls live markets &amp; odds only — never places a bet. Click a runner to fill the form below.</div>
+  </div>
+
   <div class="card">
     <h2>Log a forecast</h2>
     <form id="f">
@@ -156,6 +181,32 @@ function renderScore(s){
   el.innerHTML = html;
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function betfairSearch(){
+  const q = document.getElementById("bfq").value.trim();
+  const el = document.getElementById("bfresults");
+  if(!q){ el.innerHTML=""; return; }
+  el.innerHTML = '<div class="mut">searching…</div>';
+  const r = await api("GET","/api/betfair/search?q="+encodeURIComponent(q));
+  if(r.error){ el.innerHTML='<div class="red">'+esc(r.error)+'</div>'; return; }
+  if(!r.markets || !r.markets.length){ el.innerHTML='<div class="empty">No markets found.</div>'; return; }
+  el.innerHTML = r.markets.map(m=>`<div style="margin-bottom:10px">
+    <div style="font-weight:600;margin-bottom:4px">${esc(m.title)}</div>
+    <div>`+ m.runners.map(rn=>{
+      const odds = rn.odds==null ? "n/a" : rn.odds;
+      const prob = rn.prob==null ? "" : " ("+pct(rn.prob)+")";
+      const dis = rn.odds==null ? "disabled" : "";
+      return `<button class="sm" style="margin:2px" ${dis}
+        onclick='fillFromBetfair(${JSON.stringify(m.title)},${JSON.stringify(rn.name)},${rn.odds})'>
+        ${esc(rn.name)} @ ${odds}${prob}</button>`;
+    }).join("") +`</div></div>`).join("");
+}
+function fillFromBetfair(title, runner, odds){
+  document.getElementById("q").value = title + " — " + runner;
+  document.getElementById("mp").value = odds;
+  document.getElementById("mode").value = "odds";
+  document.getElementById("yp").focus();
+  document.getElementById("addnote").innerHTML = "filled from Betfair — now enter YOUR probability and Add";
+}
 async function resolve(id,outcome){ await api("POST",`/api/forecasts/${id}/resolve`,{outcome}); load(); }
 async function del(id){ if(confirm("Delete "+id+"?")){ await api("DELETE",`/api/forecasts/${id}`); load(); } }
 document.getElementById("f").addEventListener("submit", async e=>{
@@ -194,8 +245,21 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/" or self.path == "/index.html":
             return self._send(200, PAGE.encode(), "text/html; charset=utf-8")
+        if self.path.startswith("/api/betfair/search"):
+            return self._betfair_search()
         status, result = dispatch("GET", self.path, None, Journal(self.journal_path))
         self._send(status, result)
+
+    def _betfair_search(self):
+        client = _betfair_client()
+        if client is None:
+            return self._send(200, {"error": "Betfair not configured. Set BETFAIR_APP_KEY, "
+                                             "BETFAIR_USERNAME and BETFAIR_PASSWORD, then restart."})
+        q = parse_qs(urlparse(self.path).query).get("q", [""])[0]
+        try:
+            return self._send(200, {"markets": client.search_markets(q)})
+        except Exception as exc:  # surface login/network errors to the UI, don't crash
+            return self._send(200, {"error": f"Betfair: {exc}"})
 
     def _body(self):
         n = int(self.headers.get("Content-Length", 0))
