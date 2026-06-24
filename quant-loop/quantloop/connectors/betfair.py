@@ -26,21 +26,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .. import mathx
+from ..mathx import odds_to_prob, prob_to_odds  # decimal odds <-> probability
 
 BETTING_ENDPOINT = "https://api.betfair.com/exchange/betting/json-rpc/v1"
 LOGIN_ENDPOINT = "https://identitysso.betfair.com/api/login"          # interactive
 CERT_LOGIN_ENDPOINT = "https://identitysso-cert.betfair.com/api/certlogin"  # bots
-
-
-def odds_to_prob(odds: float) -> float:
-    """Decimal odds -> implied probability (2.0 -> 0.5)."""
-    return mathx.clamp01(1.0 / odds) if odds and odds > 1.0 else 0.0
-
-
-def prob_to_odds(prob: float) -> float:
-    """Probability -> decimal odds (0.5 -> 2.0)."""
-    p = mathx.clamp01(prob)
-    return 1.0 / p
 
 
 @dataclass

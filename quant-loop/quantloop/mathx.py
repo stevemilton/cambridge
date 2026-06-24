@@ -65,6 +65,16 @@ def clamp01(p: float) -> float:
     return min(0.999, max(0.001, p))
 
 
+def odds_to_prob(odds: float) -> float:
+    """Decimal odds -> implied probability (2.50 -> 0.40, 2.0 -> 0.50)."""
+    return clamp01(1.0 / odds) if odds and odds > 1.0 else 0.0
+
+
+def prob_to_odds(prob: float) -> float:
+    """Probability -> decimal odds (0.50 -> 2.0)."""
+    return 1.0 / clamp01(prob)
+
+
 def brier_score(probs: Sequence[float], outcomes: Sequence[int]) -> float:
     """Mean squared error of probability forecasts vs binary outcomes (0..1, lower better).
 
