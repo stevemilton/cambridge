@@ -15,6 +15,19 @@ Brier gate the loop's verifier uses, run by hand on real markets.
    python3 forecast.py add "Will Film X open #1 this weekend?" 70% 55% --category box-office
    python3 forecast.py add "Will Song Y reach the Top 10?" 35% 50% --category charts --notes "TikTok velocity stalling"
    ```
+   Football/Betfair markets are quoted in **decimal odds**, not probabilities —
+   add `--odds` and paste them straight in (2.50 → 40%):
+   ```bash
+   python3 forecast.py add "Will Brazil beat Croatia?" 60% 2.10 --odds --category wc-match
+   python3 forecast.py add "Will Mbappe be top scorer?" 22% 5.00 --odds --category wc-golden-boot
+   ```
+
+   > **Efficiency warning — pick your battles.** Big markets (World Cup match
+   > results, the title race) are the sharpest on earth; you almost certainly
+   > won't beat them, and a flat result there is the expected one. The edge — if
+   > you have one — lives in the *soft* markets: novelty/"specials", player buzz,
+   > longshots, and anything cultural rather than sporting. Tag them as separate
+   > categories so `score` shows you where (if anywhere) you actually beat the market.
 3. **Resolve it** when the market settles:
    ```bash
    python3 forecast.py resolve F001 yes

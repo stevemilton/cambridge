@@ -7,6 +7,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from quantloop.journal import Journal, parse_outcome, parse_prob
+from quantloop.mathx import odds_to_prob, prob_to_odds
 
 
 def _journal():
@@ -25,6 +26,14 @@ def test_parse_prob_forms():
 def test_parse_outcome():
     assert parse_outcome("yes") == 1 and parse_outcome("Y") == 1 and parse_outcome("1") == 1
     assert parse_outcome("no") == 0 and parse_outcome("0") == 0
+
+
+def test_odds_conversion():
+    # Decimal odds <-> probability, for football/Betfair-style inputs.
+    assert odds_to_prob(2.0) == 0.5
+    assert abs(odds_to_prob(2.5) - 0.4) < 1e-9
+    assert abs(odds_to_prob(4.0) - 0.25) < 1e-9
+    assert abs(prob_to_odds(0.5) - 2.0) < 1e-9
 
 
 def test_add_resolve_roundtrip_persists():

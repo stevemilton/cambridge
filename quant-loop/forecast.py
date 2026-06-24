@@ -43,7 +43,9 @@ def main() -> None:
     a = sub.add_parser("add", help="log a new forecast")
     a.add_argument("question")
     a.add_argument("your_prob", help="your probability (0.70 / 70 / 70%%)")
-    a.add_argument("market_price", help="the market's price (0.55 / 55 / 55%%)")
+    a.add_argument("market_price", help="the market's price (0.55 / 55 / 55%%), or decimal odds with --odds")
+    a.add_argument("--odds", action="store_true",
+                   help="read market_price as decimal odds (2.50 -> 40%%) — for football/Betfair")
     a.add_argument("--category", default="")
     a.add_argument("--notes", default="")
 
@@ -63,8 +65,13 @@ def main() -> None:
     j = Journal(args.file)
 
     if args.cmd == "add":
-        e = j.add(args.question, args.your_prob, args.market_price, args.category, args.notes)
-        print(f"logged {e['id']}: you {e['your_prob']:.0%} vs market {e['market_price']:.0%}")
+        market = args.market_price
+        if args.odds:
+            from quantloop.mathx import odds_to_prob
+            market = odds_to_prob(float(args.market_price))
+        e = j.add(args.question, args.your_prob, market, args.category, args.notes)
+        extra = f" (from odds {args.market_price})" if args.odds else ""
+        print(f"logged {e['id']}: you {e['your_prob']:.0%} vs market {e['market_price']:.0%}{extra}")
     elif args.cmd == "list":
         entries = j.list(args.status)
         if not entries:
