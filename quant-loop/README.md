@@ -72,11 +72,19 @@ venue, [`BETFAIR.md`](BETFAIR.md) maps the loop onto Betfair Exchange (back/lay
 odds ↔ probability) with a connector skeleton in
 `quantloop/connectors/betfair.py`.
 
-### Step 0: prove the edge first (`forecast.py`)
+### Step 0: prove the edge first (`forecast.py` / dashboard)
 
 A loop only deserves capital once you've shown you can forecast a niche better
 than the market. The **forecasting journal** measures that for £0 — no venue, no
-money:
+money. Prefer a UI? Run the local dashboard (stdlib only, no install):
+
+```bash
+python3 dashboard.py        # then open http://127.0.0.1:8765
+```
+
+Add forecasts, resolve them with a click, and watch your Brier-vs-market edge,
+calibration, and per-category breakdown update live. It reads/writes the same
+`forecasts.json` as the CLI, so the two interchange. The CLI does the same:
 
 ```bash
 python3 forecast.py add "Will Film X open #1?" 70% 55% --category box-office
