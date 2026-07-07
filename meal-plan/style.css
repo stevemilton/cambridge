@@ -504,3 +504,60 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
   .recipe { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
   .page-header { padding: 1rem 0; }
 }
+
+/* ---------- Recipe card grid & filters (v2, simple site) ---------- */
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.6rem 0 0; }
+.filter-btn {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font: 600 0.85rem var(--sans);
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.filter-btn:hover { border-color: var(--terracotta); color: var(--terracotta-deep); }
+.filter-btn.active { background: var(--olive); border-color: var(--olive); color: #fff; }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.8rem;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.2rem 1.3rem;
+  text-decoration: none;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--terracotta); color: var(--ink); }
+.card .card-emoji { font-size: 1.7rem; line-height: 1; }
+.card h3 { font-size: 1.06rem; margin: 0; }
+.card .card-meta { font-size: 0.8rem; color: var(--ink-soft); margin-top: auto; }
+.card .card-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--sage);
+  color: var(--olive-deep);
+}
+.tag.tmx { background: #e3ede6; color: #2e6b45; }
+.tag.quick { background: var(--blush); color: var(--terracotta-deep); }
+
+.note.tmx { background: #e9f2ec; border-color: #cfe2d5; }
+.note.tmx h4 { color: #2e6b45; }
+
+.recipe-compact .recipe-notes { margin-top: 1.6rem; padding-top: 1.4rem; }
