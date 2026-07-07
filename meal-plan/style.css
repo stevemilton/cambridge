@@ -355,10 +355,9 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
   padding: 0.42rem 0;
   border-bottom: 1px dotted var(--line);
   font-size: 0.95rem;
-  display: flex;
-  gap: 0.6rem;
+  overflow-wrap: break-word;
 }
-.ingredients li strong { color: var(--olive-deep); min-width: 84px; font-variant-numeric: tabular-nums; }
+.ingredients li strong { color: var(--olive-deep); font-variant-numeric: tabular-nums; margin-right: 0.25rem; }
 
 .equipment { margin-top: 1.8rem; }
 .equipment ul { list-style: none; padding: 0; font-size: 0.92rem; }
