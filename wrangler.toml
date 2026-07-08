@@ -1,0 +1,9 @@
+# Cloudflare Pages project config for cambridgetech.
+# Applied on `wrangler pages deploy` — registers the Workers AI binding
+# used by /functions/api/suggest.js (the meal-plan AI Chef).
+name = "cambridgetech"
+compatibility_date = "2026-06-01"
+pages_build_output_dir = "."
+
+[ai]
+binding = "AI"

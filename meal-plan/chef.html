@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chef — The Shared Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Site navigation">
+  <div class="wrap">
+    <a class="brand" href="index.html">The Shared Table</a>
+    <a class="nav-link" href="breakfasts.html">Breakfasts</a>
+    <a class="nav-link" href="lunches.html">Lunches</a>
+    <a class="nav-link" href="dinners.html">Dinners</a>
+    <a class="nav-link" href="treats.html">Treats</a>
+    <a class="nav-link" href="chef.html" aria-current="page">AI Chef 🧑‍🍳</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="wrap">
+    <span class="eyebrow">What&rsquo;s in the fridge?</span>
+    <h1>AI Chef</h1>
+    <p class="lede">Tell the chef what you like — or what&rsquo;s actually in the fridge — and it will pick tonight&rsquo;s best matches from the family recipes, plus dream up one brand-new idea.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="chef-box">
+      <h2 style="font-size:1.3rem;">Your ingredients</h2>
+      <div class="chip-row" id="chip-row">
+        <input id="chef-input" type="text" autocomplete="off" placeholder="Type an ingredient and press Enter — chicken, avocado, rice…" aria-label="Add an ingredient">
+      </div>
+      <div class="quick-adds" id="quick-adds">
+        <button class="quick-add">chicken</button>
+        <button class="quick-add">salmon</button>
+        <button class="quick-add">prawns</button>
+        <button class="quick-add">steak</button>
+        <button class="quick-add">eggs</button>
+        <button class="quick-add">rice</button>
+        <button class="quick-add">pasta</button>
+        <button class="quick-add">avocado</button>
+        <button class="quick-add">peanut butter</button>
+        <button class="quick-add">halloumi</button>
+        <button class="quick-add">chocolate</button>
+        <button class="quick-add">banana</button>
+      </div>
+      <div class="chef-actions">
+        <button class="btn" id="suggest-btn" disabled>Ask the chef 🧑‍🍳</button>
+        <button class="btn secondary" id="clear-btn">Clear</button>
+        <span class="suggest-hint" id="hint">Add at least one ingredient to begin.</span>
+      </div>
+    </div>
+
+    <div id="ai-result"></div>
+
+    <section class="section" id="local-results" style="display:none;">
+      <h2>Best matches from the recipes</h2>
+      <div class="cards" id="match-cards"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>The Shared Table · Family Recipes</span>
+    <span>AI Chef</span>
+  </div>
+</footer>
+
+<script src="recipes.js?v=1"></script>
+<script src="app.js?v=1" defer></script>
+<script>
+(function () {
+  const ings = [];
+  const input = document.getElementById('chef-input');
+  const chipRow = document.getElementById('chip-row');
+  const suggestBtn = document.getElementById('suggest-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const hint = document.getElementById('hint');
+  const aiResult = document.getElementById('ai-result');
+  const localSection = document.getElementById('local-results');
+  const matchCards = document.getElementById('match-cards');
+  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+
+  function refresh() {
+    chipRow.querySelectorAll('.chip').forEach(c => c.remove());
+    ings.forEach((ing, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.appendChild(document.createTextNode(ing + ' '));
+      const x = document.createElement('button');
+      x.textContent = '✕';
+      x.setAttribute('aria-label', 'Remove ' + ing);
+      x.addEventListener('click', () => { ings.splice(i, 1); refresh(); });
+      chip.appendChild(x);
+      chipRow.insertBefore(chip, input);
+    });
+    suggestBtn.disabled = ings.length === 0;
+    hint.textContent = ings.length ? ings.length + ' ingredient' + (ings.length > 1 ? 's' : '') + ' — ready when you are.' : 'Add at least one ingredient to begin.';
+    renderLocal();
+  }
+
+  function addIng(raw) {
+    const v = raw.trim().toLowerCase().replace(/[^\w\s&'-]/g, '').slice(0, 40);
+    if (v && !ings.includes(v) && ings.length < 15) { ings.push(v); refresh(); }
+    input.value = '';
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addIng(input.value); }
+    else if (e.key === 'Backspace' && !input.value && ings.length) { ings.pop(); refresh(); }
+  });
+  document.getElementById('quick-adds').addEventListener('click', (e) => {
+    const b = e.target.closest('.quick-add');
+    if (b) addIng(b.textContent);
+  });
+  clearBtn.addEventListener('click', () => { ings.length = 0; aiResult.innerHTML = ''; refresh(); });
+
+  function scoreRecipes() {
+    return window.RECIPES.map(r => {
+      const matched = ings.filter(term =>
+        r.ing.some(k => k.includes(term) || term.includes(k)));
+      return { r, matched, score: matched.length };
+    }).filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score || b.r.protein - a.r.protein)
+      .slice(0, 6);
+  }
+
+  function cardHTML(r, subtitle) {
+    return '<a class="card" href="' + r.url + '">' +
+      '<span class="card-emoji">' + r.emoji + '</span>' +
+      '<h3>' + r.title + '</h3>' +
+      '<div class="card-tags"><span class="tag">' + r.cat.charAt(0).toUpperCase() + r.cat.slice(1) + '</span></div>' +
+      '<span class="card-meta">' + (subtitle || (r.kcal + ' kcal · ' + r.protein + 'g protein')) + '</span></a>';
+  }
+
+  function renderLocal() {
+    const scored = scoreRecipes();
+    localSection.style.display = scored.length ? '' : 'none';
+    matchCards.innerHTML = scored.map(({ r, matched }) =>
+      cardHTML(r, r.kcal + ' kcal · ' + r.protein + 'g protein · uses ' + matched.join(', '))).join('');
+  }
+
+  suggestBtn.addEventListener('click', async () => {
+    suggestBtn.disabled = true;
+    aiResult.innerHTML = '<div class="ai-panel"><h3>🧑‍🍳 The chef is thinking<span class="ai-loading">…</span></h3></div>';
+    try {
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ingredients: ings,
+          catalog: window.RECIPES.map(r => ({ id: r.id, title: r.title, ing: r.ing.join(', ') })),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.error) throw new Error((data && data.error) || 'request-failed');
+
+      let html = '<div class="ai-panel"><h3>🧑‍🍳 The chef says…</h3>';
+      if (data.matches && data.matches.length) {
+        html += data.matches.map(m => {
+          const r = byId[m.id];
+          if (!r) return '';
+          return '<p class="ai-reason"><strong><a href="' + r.url + '">' + r.emoji + ' ' + r.title + '</a></strong> — ' + escapeHtml(m.reason) + '</p>';
+        }).join('');
+      } else if (data.raw) {
+        html += '<p class="ai-reason">' + escapeHtml(data.raw) + '</p>';
+      } else {
+        html += '<p class="ai-reason">Nothing on the menu quite fits those — but see the idea below.</p>';
+      }
+      if (data.idea && data.idea.title) {
+        html += '<div class="ai-idea"><strong>✨ Off-menu idea: ' + escapeHtml(data.idea.title) + '</strong><br>' + escapeHtml(data.idea.description) + '</div>';
+      }
+      html += '</div>';
+      aiResult.innerHTML = html;
+    } catch (err) {
+      aiResult.innerHTML = '<div class="ai-panel"><h3>🧑‍🍳 The chef is off duty</h3><p class="ai-reason">AI suggestions aren&rsquo;t available right now — the best matches from the site are shown below instead.</p></div>';
+      renderLocal();
+    } finally {
+      suggestBtn.disabled = ings.length === 0;
+    }
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+})();
+</script>
+</body>
+</html>

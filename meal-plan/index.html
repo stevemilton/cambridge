@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -16,8 +16,10 @@
   <div class="wrap">
     <a class="brand" href="index.html">The Shared Table</a>
     <a class="nav-link" href="breakfasts.html">Breakfasts</a>
-    <a class="nav-link" href="lunches.html">Lunch Bowls &amp; Wraps</a>
+    <a class="nav-link" href="lunches.html">Lunches</a>
     <a class="nav-link" href="dinners.html">Dinners</a>
+    <a class="nav-link" href="treats.html">Treats</a>
+    <a class="nav-link" href="chef.html">AI Chef 🧑‍🍳</a>
   </div>
 </nav>
 
@@ -25,15 +27,22 @@
   <div class="wrap">
     <span class="eyebrow">Family Recipes</span>
     <h1>What&rsquo;s for dinner?</h1>
-    <p class="lede">Twenty-one high-protein recipes the whole family actually wants to eat — bowls, wraps, traybakes and burger nights. Every recipe has a <strong>Thermomix method</strong> where the machine earns its spot, macros for the adult portion, and a bigger-carbs note for the teenager.</p>
+    <p class="lede">Twenty-seven high-protein recipes the whole family actually wants to eat — bowls, wraps, traybakes, burger nights and proper desserts. Every recipe has a <strong>Thermomix method</strong> where the machine earns its spot, macros for the adult portion, and a bigger-carbs note for the teenager. Tap the <strong>♡</strong> on any recipe to save it to your favourites.</p>
 
     <div class="filters" id="filters">
       <button class="filter-btn active" data-filter="all">All recipes</button>
+      <button class="filter-btn" data-filter="fav">♥ Favourites</button>
       <button class="filter-btn" data-filter="breakfast">Breakfast</button>
       <button class="filter-btn" data-filter="lunch">Lunch</button>
       <button class="filter-btn" data-filter="dinner">Dinner</button>
+      <button class="filter-btn" data-filter="treat">Treats</button>
       <button class="filter-btn" data-filter="quick">Under 25 min</button>
       <button class="filter-btn" data-filter="tmx">Thermomix ★</button>
+    </div>
+
+    <div class="callout" style="margin-bottom:0;">
+      <h4>🧑‍🍳 New: the AI Chef</h4>
+      <p>Tell it what&rsquo;s in the fridge — it picks tonight&rsquo;s best matches and invents one new idea. <a href="chef.html"><strong>Try the AI Chef →</strong></a></p>
     </div>
   </div>
 </header>
@@ -175,7 +184,47 @@
         <span class="card-meta">640 kcal · 48g protein</span>
       </a>
 
+      <!-- Treats -->
+      <a class="card" href="treats.html#t1" data-cat="treat quick tmx">
+        <span class="card-emoji">🍫</span>
+        <h3>Frozen Yogurt Bark</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag quick">10 min prep</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">140 kcal · 9g protein per serving</span>
+      </a>
+      <a class="card" href="treats.html#t2" data-cat="treat tmx">
+        <span class="card-emoji">🧁</span>
+        <h3>Chocolate Banana Blender Muffins</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">145 kcal per muffin</span>
+      </a>
+      <a class="card" href="treats.html#t3" data-cat="treat tmx">
+        <span class="card-emoji">🍬</span>
+        <h3>Date &amp; Peanut &ldquo;Snickers&rdquo; Bites</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">95 kcal per bite</span>
+      </a>
+      <a class="card" href="treats.html#t4" data-cat="treat quick tmx">
+        <span class="card-emoji">🍦</span>
+        <h3>Peanut Butter Banana Nice Cream</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag quick">5 min</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">180 kcal · 7g protein</span>
+      </a>
+      <a class="card" href="treats.html#t5" data-cat="treat tmx">
+        <span class="card-emoji">🍮</span>
+        <h3>Dark Chocolate Yogurt Mousse Pots</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">165 kcal · 9g protein</span>
+      </a>
+      <a class="card" href="treats.html#t6" data-cat="treat tmx">
+        <span class="card-emoji">🥧</span>
+        <h3>Warm Apple &amp; Berry Crumble Pots</h3>
+        <div class="card-tags"><span class="tag treat">Treat</span><span class="tag tmx">Thermomix ★</span></div>
+        <span class="card-meta">220 kcal · 6g protein</span>
+      </a>
+
     </div>
+
+    <p id="fav-empty" style="display:none; margin-top:2rem; color:var(--ink-soft);">No favourites yet — tap the ♡ on any recipe card to save it here.</p>
 
     <section class="section">
       <h2>How the portions work</h2>
@@ -195,22 +244,11 @@
 <footer class="site-footer">
   <div class="wrap">
     <span>The Shared Table · Family Recipes</span>
-    <span>5 breakfasts · 8 lunches · 8 dinners · Thermomix-friendly</span>
+    <span>5 breakfasts · 8 lunches · 8 dinners · 6 treats · Thermomix-friendly</span>
   </div>
 </footer>
 
-<script>
-document.getElementById('filters').addEventListener('click', function (e) {
-  const btn = e.target.closest('.filter-btn');
-  if (!btn) return;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const f = btn.dataset.filter;
-  document.querySelectorAll('#cards .card').forEach(card => {
-    card.style.display = (f === 'all' || card.dataset.cat.split(' ').includes(f)) ? '' : 'none';
-  });
-});
-</script>
+<script src="app.js?v=1" defer></script>
 
 </body>
 </html>

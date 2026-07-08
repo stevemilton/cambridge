@@ -1,0 +1,35 @@
+// Recipe catalogue for The Shared Table — drives the AI Chef matcher.
+// ing: lowercase searchable ingredient keywords for local + AI matching.
+window.RECIPES = [
+  // Breakfasts
+  { id: 'b1', title: 'Berry & Banana Protein Smoothie Bowl', url: 'breakfasts.html#b1', cat: 'breakfast', emoji: '🫐', kcal: 420, protein: 30, ing: ['berries', 'banana', 'greek yogurt', 'oats', 'milk', 'honey', 'granola', 'seeds'] },
+  { id: 'b2', title: 'Banana Protein Pancakes', url: 'breakfasts.html#b2', cat: 'breakfast', emoji: '🥞', kcal: 435, protein: 32, ing: ['oats', 'cottage cheese', 'eggs', 'banana', 'blueberries', 'greek yogurt', 'honey', 'cinnamon'] },
+  { id: 'b3', title: 'Overnight Oats, Three Ways', url: 'breakfasts.html#b3', cat: 'breakfast', emoji: '🥣', kcal: 440, protein: 30, ing: ['oats', 'greek yogurt', 'milk', 'apple', 'cinnamon', 'berries', 'peanut butter', 'banana', 'walnuts', 'honey'] },
+  { id: 'b4', title: 'Breakfast Burrito', url: 'breakfasts.html#b4', cat: 'breakfast', emoji: '🌯', kcal: 450, protein: 30, ing: ['eggs', 'pepper', 'avocado', 'cheddar', 'cheese', 'tortilla', 'wrap', 'spinach', 'spring onion'] },
+  { id: 'b5', title: 'Greek Yogurt Crunch Bowl', url: 'breakfasts.html#b5', cat: 'breakfast', emoji: '🍯', kcal: 420, protein: 34, ing: ['greek yogurt', 'berries', 'honey', 'granola', 'lemon'] },
+  // Lunches
+  { id: 'l1', title: 'Chicken Souvlaki Bowl', url: 'lunches.html#l1', cat: 'lunch', emoji: '🇬🇷', kcal: 545, protein: 44, ing: ['chicken', 'rice', 'greek yogurt', 'cucumber', 'tomatoes', 'lemon', 'garlic', 'oregano', 'olives', 'red onion', 'mint'] },
+  { id: 'l2', title: 'Salmon Poke-Style Bowl', url: 'lunches.html#l2', cat: 'lunch', emoji: '🍣', kcal: 540, protein: 38, ing: ['salmon', 'rice', 'soy sauce', 'honey', 'ginger', 'edamame', 'cucumber', 'carrot', 'avocado', 'sesame', 'sriracha', 'lime'] },
+  { id: 'l3', title: 'Chicken Burrito Bowl', url: 'lunches.html#l3', cat: 'lunch', emoji: '🌮', kcal: 560, protein: 44, ing: ['chicken', 'rice', 'black beans', 'sweetcorn', 'corn', 'tomatoes', 'avocado', 'lime', 'coriander', 'greek yogurt', 'paprika', 'cumin', 'lettuce'] },
+  { id: 'l4', title: 'Chicken Gyros Pittas', url: 'lunches.html#l4', cat: 'lunch', emoji: '🥙', kcal: 520, protein: 42, ing: ['chicken', 'pitta', 'greek yogurt', 'cucumber', 'red cabbage', 'carrot', 'tomatoes', 'garlic', 'oregano', 'paprika', 'lemon'] },
+  { id: 'l5', title: 'Zesty Prawn Rice Bowl', url: 'lunches.html#l5', cat: 'lunch', emoji: '🍤', kcal: 520, protein: 36, ing: ['prawns', 'brown rice', 'rice', 'garlic', 'chilli', 'avocado', 'cucumber', 'carrot', 'edamame', 'peas', 'lime', 'soy sauce', 'ginger', 'coriander', 'seeds'] },
+  { id: 'l6', title: 'Chicken Caesar Wraps', url: 'lunches.html#l6', cat: 'lunch', emoji: '🥗', kcal: 495, protein: 42, ing: ['chicken', 'tortilla', 'wrap', 'lettuce', 'greek yogurt', 'parmesan', 'cheese', 'tomatoes', 'lemon', 'garlic', 'anchovy', 'dijon', 'mustard'] },
+  { id: 'l7', title: 'Halloumi & Roast Veg Couscous Bowl', url: 'lunches.html#l7', cat: 'lunch', emoji: '🧀', kcal: 510, protein: 30, ing: ['halloumi', 'cheese', 'couscous', 'pepper', 'courgette', 'red onion', 'chickpeas', 'honey', 'lemon', 'mint', 'cumin'] },
+  { id: 'l8', title: 'Chicken Satay Noodle Bowl', url: 'lunches.html#l8', cat: 'lunch', emoji: '🥜', kcal: 560, protein: 44, ing: ['chicken', 'noodles', 'peanut butter', 'peanuts', 'soy sauce', 'lime', 'honey', 'ginger', 'garlic', 'pepper', 'carrot', 'green beans', 'chilli', 'coriander'] },
+  // Dinners
+  { id: 'd1', title: 'Garlic & Lemon Chicken, Crispy Potatoes', url: 'dinners.html#d1', cat: 'dinner', emoji: '🍋', kcal: 640, protein: 52, ing: ['chicken', 'potatoes', 'broccoli', 'garlic', 'lemon', 'oregano', 'rosemary', 'thyme', 'dijon', 'honey'] },
+  { id: 'd2', title: 'Sticky Honey-Garlic Salmon Rice Bowl', url: 'dinners.html#d2', cat: 'dinner', emoji: '🍚', kcal: 620, protein: 42, ing: ['salmon', 'rice', 'broccoli', 'honey', 'soy sauce', 'garlic', 'ginger', 'sesame', 'cucumber', 'spring onion', 'sriracha'] },
+  { id: 'd3', title: 'Turkey Ragu Spaghetti', url: 'dinners.html#d3', cat: 'dinner', emoji: '🍝', kcal: 630, protein: 48, ing: ['turkey mince', 'turkey', 'spaghetti', 'pasta', 'tomatoes', 'carrot', 'courgette', 'mushrooms', 'onion', 'garlic', 'parmesan', 'cheese', 'basil'] },
+  { id: 'd4', title: 'Chicken Fajita Traybake', url: 'dinners.html#d4', cat: 'dinner', emoji: '🌶️', kcal: 620, protein: 46, ing: ['chicken', 'pepper', 'red onion', 'tortilla', 'wrap', 'lime', 'paprika', 'cumin', 'avocado', 'greek yogurt', 'cheddar', 'cheese', 'tomatoes', 'coriander'] },
+  { id: 'd5', title: 'Baked Chicken Katsu Curry', url: 'dinners.html#d5', cat: 'dinner', emoji: '🍛', kcal: 650, protein: 48, ing: ['chicken', 'rice', 'panko', 'breadcrumbs', 'curry powder', 'carrot', 'onion', 'garlic', 'ginger', 'turmeric', 'honey', 'soy sauce', 'cucumber', 'eggs'] },
+  { id: 'd6', title: 'Turkey Smash Burgers & Oven Chips', url: 'dinners.html#d6', cat: 'dinner', emoji: '🍔', kcal: 655, protein: 47, ing: ['turkey mince', 'turkey', 'burger', 'buns', 'potatoes', 'chips', 'cheddar', 'cheese', 'lettuce', 'tomatoes', 'greek yogurt', 'paprika', 'gherkin', 'onion'] },
+  { id: 'd7', title: 'Steak Night with Chimichurri', url: 'dinners.html#d7', cat: 'dinner', emoji: '🥩', kcal: 635, protein: 50, ing: ['steak', 'beef', 'sirloin', 'potatoes', 'pepper', 'green beans', 'parsley', 'garlic', 'chilli', 'oregano', 'red wine vinegar'] },
+  { id: 'd8', title: 'Creamy Cajun Chicken Pasta', url: 'dinners.html#d8', cat: 'dinner', emoji: '🧄', kcal: 640, protein: 48, ing: ['chicken', 'pasta', 'penne', 'pepper', 'onion', 'garlic', 'creme fraiche', 'parmesan', 'cheese', 'spinach', 'paprika', 'cajun'] },
+  // Treats
+  { id: 't1', title: 'Frozen Yogurt Bark', url: 'treats.html#t1', cat: 'treat', emoji: '🍫', kcal: 140, protein: 9, ing: ['greek yogurt', 'berries', 'honey', 'dark chocolate', 'chocolate', 'vanilla', 'pistachios', 'nuts'] },
+  { id: 't2', title: 'Chocolate Banana Blender Muffins', url: 'treats.html#t2', cat: 'treat', emoji: '🧁', kcal: 145, protein: 6, ing: ['oats', 'banana', 'cocoa', 'chocolate', 'eggs', 'greek yogurt', 'honey', 'chocolate chips'] },
+  { id: 't3', title: "Date & Peanut 'Snickers' Bites", url: 'treats.html#t3', cat: 'treat', emoji: '🍬', kcal: 95, protein: 3, ing: ['dates', 'peanut butter', 'peanuts', 'oats', 'dark chocolate', 'chocolate', 'salt'] },
+  { id: 't4', title: 'Peanut Butter Banana Nice Cream', url: 'treats.html#t4', cat: 'treat', emoji: '🍦', kcal: 180, protein: 7, ing: ['banana', 'peanut butter', 'greek yogurt', 'ice cream', 'honey', 'dark chocolate', 'chocolate'] },
+  { id: 't5', title: 'Dark Chocolate Yogurt Mousse Pots', url: 'treats.html#t5', cat: 'treat', emoji: '🍮', kcal: 165, protein: 9, ing: ['dark chocolate', 'chocolate', 'greek yogurt', 'honey', 'vanilla', 'raspberries', 'berries'] },
+  { id: 't6', title: 'Warm Apple & Berry Crumble Pots', url: 'treats.html#t6', cat: 'treat', emoji: '🥧', kcal: 220, protein: 6, ing: ['apple', 'berries', 'oats', 'almonds', 'nuts', 'butter', 'honey', 'cinnamon', 'greek yogurt'] },
+];

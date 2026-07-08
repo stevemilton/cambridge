@@ -560,3 +560,118 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
 .note.tmx h4 { color: #2e6b45; }
 
 .recipe-compact .recipe-notes { margin-top: 1.6rem; padding-top: 1.4rem; }
+
+/* ---------- Favourites ---------- */
+
+.recipe, .card { position: relative; }
+
+.fav-btn {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, color 0.12s ease;
+  z-index: 2;
+}
+.fav-btn:hover { transform: scale(1.12); color: var(--terracotta-deep); }
+.fav-btn.on { color: #c0392b; border-color: #e8c8c0; background: #fdf3f0; }
+.recipe .fav-btn { top: 1.2rem; right: 1.2rem; width: 2.6rem; height: 2.6rem; font-size: 1.25rem; }
+
+.tag.treat { background: #f3e6f0; color: #7d3b6e; }
+
+/* ---------- AI Chef ---------- */
+
+.chef-box {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: clamp(1.4rem, 3.5vw, 2.4rem);
+  margin-top: 2rem;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--cream);
+  padding: 0.6rem 0.8rem;
+  margin-top: 1rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--olive);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem 0.3rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.chip button {
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#chef-input {
+  flex: 1;
+  min-width: 160px;
+  border: none;
+  background: transparent;
+  font: 400 1rem var(--sans);
+  color: var(--ink);
+  padding: 0.35rem 0.2rem;
+  outline: none;
+}
+
+.chef-actions { display: flex; gap: 0.7rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; }
+.btn.secondary { background: var(--paper); color: var(--olive-deep); border: 1px solid var(--line); }
+.btn.secondary:hover { color: var(--terracotta-deep); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.suggest-hint { font-size: 0.85rem; color: var(--ink-soft); }
+.quick-adds { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+.quick-add {
+  border: 1px dashed var(--line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  font: 500 0.82rem var(--sans);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.quick-add:hover { border-color: var(--olive); color: var(--olive-deep); }
+
+.ai-panel {
+  margin-top: 1.6rem;
+  background: linear-gradient(135deg, #eef3e6 0%, var(--sage) 100%);
+  border: 1px solid #d8e0c8;
+  border-radius: 16px;
+  padding: 1.4rem 1.6rem;
+}
+.ai-panel h3 { border: none; margin: 0 0 0.6rem; padding: 0; }
+.ai-panel .ai-reason { font-size: 0.95rem; }
+.ai-panel .ai-idea { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #c6d0b2; font-size: 0.95rem; }
+.ai-loading { display: inline-block; animation: chef-pulse 1.2s ease-in-out infinite; }
+@keyframes chef-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
