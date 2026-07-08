@@ -786,3 +786,14 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
 }
 .toast.show { opacity: 1; pointer-events: auto; }
 .toast a { color: #ffe9a8; }
+
+/* ---------- Small-screen fixes: keep action buttons clear of headings ---------- */
+
+.card h3 { padding-right: 2rem; }
+
+@media (max-width: 700px) {
+  .recipe { padding-top: 4.9rem; }
+  .recipe .fav-btn { top: 1.1rem; right: 1.1rem; }
+  .recipe .plan-btn { top: 1.1rem; right: 4.1rem; }
+  .plan-pop { top: 4rem; right: 1.1rem; }
+}
