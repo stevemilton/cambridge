@@ -252,6 +252,12 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   render();
+
+  // Re-render after back/forward-cache restores and cross-tab changes, so
+  // meals added via a recipe's Plan button always show up.
+  window.addEventListener('pageshow', (e) => { if (e.persisted) render(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  window.addEventListener('storage', (e) => { if (e.key === 'tst-plan') render(); });
 });
 </script>
 </body>

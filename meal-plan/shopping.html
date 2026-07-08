@@ -240,6 +240,14 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   render();
+
+  // The list is drawn from localStorage once on load — but browsers restore
+  // this page from the back/forward cache without re-running scripts, so
+  // items added from a recipe page wouldn't appear. Re-render on restore,
+  // on tab refocus, and when another tab changes the list.
+  window.addEventListener('pageshow', (e) => { if (e.persisted) render(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  window.addEventListener('storage', (e) => { if (e.key === 'tst-shop') render(); });
 });
 </script>
 </body>
