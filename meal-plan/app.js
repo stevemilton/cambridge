@@ -18,7 +18,7 @@
     try { return JSON.parse(localStorage.getItem(PLAN_KEY) || '{}') || {}; }
     catch (_) { return {}; }
   }
-  function savePlan(plan) { localStorage.setItem(PLAN_KEY, JSON.stringify(plan)); }
+  function savePlan(plan) { localStorage.setItem(PLAN_KEY, JSON.stringify(plan)); famTouched('plan'); }
 
   // Exposed for planner.html
   window.tstPlan = { loadPlan, savePlan, DAYS, DAY_NAMES, SLOT_FOR_PREFIX };
@@ -125,7 +125,7 @@
     try { return JSON.parse(localStorage.getItem(SHOP_KEY) || '[]') || []; }
     catch (_) { return []; }
   }
-  function saveShop(items) { localStorage.setItem(SHOP_KEY, JSON.stringify(items)); }
+  function saveShop(items) { localStorage.setItem(SHOP_KEY, JSON.stringify(items)); famTouched('shop'); }
   const normText = (t) => String(t).replace(/\s+/g, ' ').trim();
 
   // Categories: meat, veg, dairy, grain, frozen, pantry, other.
@@ -309,6 +309,99 @@
       h3.insertAdjacentElement('afterend', all);
     }
   });
+
+  // ---------- family sync (Cloudflare KV via /api/family) ----------
+  // Everyone using the same family code shares the shopping list and weekly
+  // plan. Last write wins; a dirty flag protects unsynced local edits from
+  // being overwritten by a pull.
+  const FAM_KEY = 'tst-family';
+  const STORE_KEYS = { shop: SHOP_KEY, plan: PLAN_KEY };
+  const DIRTY = { shop: 'tst-dirty-shop', plan: 'tst-dirty-plan' };
+  const EMPTY = { shop: '[]', plan: '{}' };
+  const pushTimers = {};
+
+  function famCode() { return (localStorage.getItem(FAM_KEY) || '').toUpperCase(); }
+
+  function famTouched(key) {
+    if (!famCode()) return;
+    localStorage.setItem(DIRTY[key], '1');
+    clearTimeout(pushTimers[key]);
+    pushTimers[key] = setTimeout(() => famPush(key), 800);
+  }
+
+  async function famApi(body) {
+    const res = await fetch('/api/family', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  async function famPush(key) {
+    const code = famCode();
+    if (!code) return;
+    try {
+      const data = JSON.parse(localStorage.getItem(STORE_KEYS[key]) || EMPTY[key]);
+      const j = await famApi({ code, key, action: 'put', data });
+      if (j && j.ok) localStorage.removeItem(DIRTY[key]);
+    } catch (_) { /* offline — dirty flag stays; retried on next change or pull */ }
+  }
+
+  async function famPull() {
+    const code = famCode();
+    if (!code) return false;
+    let changed = false;
+    for (const key of ['shop', 'plan']) {
+      try {
+        if (localStorage.getItem(DIRTY[key])) { await famPush(key); continue; }
+        const j = await famApi({ code, key, action: 'get' });
+        if (j && j.ok && j.data !== null && j.data !== undefined) {
+          const remote = JSON.stringify(j.data);
+          if (localStorage.getItem(STORE_KEYS[key]) !== remote) {
+            localStorage.setItem(STORE_KEYS[key], remote);
+            changed = true;
+          }
+        }
+      } catch (_) { /* offline — keep local */ }
+    }
+    if (changed) window.dispatchEvent(new CustomEvent('tst-sync'));
+    return changed;
+  }
+
+  window.tstFamily = {
+    code: famCode,
+    // Joining: take the server copy where one exists, otherwise seed the
+    // family with whatever this device already has.
+    async join(rawCode) {
+      const code = String(rawCode || '').trim().toUpperCase();
+      if (!/^[A-Z0-9-]{6,24}$/.test(code)) return { error: 'Code must be 6–24 letters, numbers or dashes.' };
+      localStorage.setItem(FAM_KEY, code);
+      for (const key of ['shop', 'plan']) {
+        try {
+          const j = await famApi({ code, key, action: 'get' });
+          if (j && j.ok) {
+            if (j.data === null || j.data === undefined) await famPush(key);
+            else localStorage.setItem(STORE_KEYS[key], JSON.stringify(j.data));
+          }
+        } catch (_) { /* offline — will sync when back online */ }
+      }
+      window.dispatchEvent(new CustomEvent('tst-sync'));
+      return { ok: true };
+    },
+    leave() {
+      localStorage.removeItem(FAM_KEY);
+      localStorage.removeItem(DIRTY.shop);
+      localStorage.removeItem(DIRTY.plan);
+    },
+    pull: famPull,
+  };
+
+  if (famCode()) {
+    famPull();
+    window.addEventListener('pageshow', (e) => { if (e.persisted) famPull(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) famPull(); });
+  }
 
   // ---------- filters (index page) ----------
   let current = 'all';

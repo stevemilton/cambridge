@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -33,6 +33,7 @@
       <button class="filter-btn active" data-week="0">This week</button>
       <button class="filter-btn" data-week="1">Next week</button>
     </div>
+      <div class="fam-box" id="fam-box"></div>
   </div>
 </header>
 
@@ -66,9 +67,20 @@
 </footer>
 
 <script src="recipes.js?v=1"></script>
-<script src="app.js?v=5" defer></script>
+<script src="app.js?v=6" defer></script>
 <script defer>
 document.addEventListener('DOMContentLoaded', function () {
+  // Recover from a stale/poisoned cached app.js: fetch a fresh copy once.
+  if (!window.tstShop || !window.tstFamily) {
+    if (!window.__tstRetried) {
+      window.__tstRetried = true;
+      const fresh = document.createElement('script');
+      fresh.src = 'app.js?fresh=' + Date.now();
+      fresh.onload = () => document.dispatchEvent(new Event('DOMContentLoaded'));
+      document.head.appendChild(fresh);
+    }
+    return;
+  }
   const { loadPlan, savePlan, DAYS, DAY_NAMES } = window.tstPlan;
   const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
   const SLOTS = [
@@ -258,6 +270,28 @@ document.addEventListener('DOMContentLoaded', function () {
   window.addEventListener('pageshow', (e) => { if (e.persisted) render(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   window.addEventListener('storage', (e) => { if (e.key === 'tst-plan') render(); });
+
+  // --- family sync UI ---
+  function renderFam() {
+    const box = document.getElementById('fam-box');
+    if (!box || !window.tstFamily) return;
+    const code = window.tstFamily.code();
+    if (code) {
+      box.innerHTML = '<span class="fam-on">👨‍👧 Family sync on · code <strong>' + code + '</strong></span> <button class="quick-add" id="fam-leave">Turn off</button>';
+      box.querySelector('#fam-leave').addEventListener('click', () => { window.tstFamily.leave(); renderFam(); });
+    } else {
+      box.innerHTML = '<span class="fam-off">👨‍👧 <strong>Family sync:</strong> share this across your devices &amp; family — pick a code (6+ letters/numbers), everyone enters the same one.</span> '
+        + '<span class="fam-join"><input id="fam-code" maxlength="24" placeholder="e.g. MILTONS7" aria-label="Family code"> <button class="btn" id="fam-join-btn" style="padding:0.45rem 1.1rem;">Turn on</button></span> <span id="fam-err" class="fam-err"></span>';
+      box.querySelector('#fam-join-btn').addEventListener('click', async () => {
+        const r = await window.tstFamily.join(box.querySelector('#fam-code').value);
+        if (r.error) { box.querySelector('#fam-err').textContent = r.error; return; }
+        renderFam();
+      });
+    }
+  }
+  renderFam();
+  window.addEventListener('tst-sync', render);
+
 });
 </script>
 </body>

@@ -896,3 +896,33 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
   margin: 1.8rem 0 0.3rem;
 }
 .shop-list { margin-top: 0.2rem; }
+
+/* ---------- Family sync box ---------- */
+.fam-box {
+  margin-top: 1.4rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  max-width: 74ch;
+}
+.fam-box .fam-on strong { color: var(--olive-deep); letter-spacing: 0.04em; }
+.fam-join { display: inline-flex; gap: 0.5rem; align-items: center; }
+.fam-box input {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--cream);
+  font: 500 0.9rem var(--sans);
+  padding: 0.4rem 0.7rem;
+  width: 150px;
+  text-transform: uppercase;
+  outline: none;
+}
+.fam-box input:focus { border-color: var(--olive); }
+.fam-err { color: var(--terracotta-deep); font-size: 0.82rem; }

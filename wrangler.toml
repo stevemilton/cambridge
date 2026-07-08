@@ -7,3 +7,7 @@ pages_build_output_dir = "."
 
 [ai]
 binding = "AI"
+
+[[kv_namespaces]]
+binding = "FAMILY"
+id = "cdc9c957eb074ae1957f1e70ab1505b9"
