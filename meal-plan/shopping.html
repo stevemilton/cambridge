@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -28,7 +28,7 @@
   <div class="wrap">
     <span class="eyebrow">The Trolley</span>
     <h1>Shopping List</h1>
-    <p class="lede">Everything you&rsquo;ve added from recipes lands here — or build the whole week&rsquo;s list from the planner in one tap. Tick things off in the supermarket; the list saves itself on this device.</p>
+    <p class="lede">Ingredients from recipes are turned into buyable items — split up, translated (&ldquo;¼ red onion&rdquo; becomes a red onion) and grouped by aisle, with store-cupboard staples kept separate so you only buy what you&rsquo;re actually out of. Recipe amounts sit under each item. Tick things off in the supermarket; the list saves itself on this device.</p>
   </div>
 </header>
 
@@ -48,7 +48,7 @@
         <button class="btn" id="shop-add-btn">Add</button>
       </div>
 
-      <ul class="shop-list" id="shop-list"></ul>
+      <div id="shop-list"></div>
       <p class="shop-empty" id="shop-empty">Nothing here yet — tap <strong>+</strong> next to any ingredient in a recipe, use <strong>🛒 Add all</strong>, or pull in the whole week from the planner above.</p>
     </div>
 
@@ -63,7 +63,7 @@
 </footer>
 
 <script src="recipes.js?v=1"></script>
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 <script defer>
 document.addEventListener('DOMContentLoaded', function () {
   const shop = window.tstShop;
@@ -73,55 +73,89 @@ document.addEventListener('DOMContentLoaded', function () {
   const input = document.getElementById('shop-input');
   const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
 
+  const CATS = [
+    ['meat', '🥩 Meat & Fish'],
+    ['veg', '🥦 Fruit & Veg'],
+    ['dairy', '🥛 Dairy & Eggs'],
+    ['grain', '🍞 Bakery & Grains'],
+    ['frozen', '🧊 Frozen'],
+    ['other', '📝 Other'],
+    ['pantry', '🏺 Store cupboard — check you have'],
+  ];
+
+  function itemRow(item) {
+    const li = document.createElement('li');
+    li.className = 'shop-item' + (item.d ? ' done' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!item.d;
+    cb.addEventListener('change', () => {
+      const all = shop.load();
+      const target = all.find(i => i.t === item.t && !!i.d === !!item.d);
+      if (target) target.d = cb.checked;
+      shop.save(all);
+      render();
+    });
+    const text = document.createElement('span');
+    text.className = 'shop-text';
+    text.textContent = item.t.charAt(0).toUpperCase() + item.t.slice(1);
+    if ((item.n || 1) > 1) {
+      const count = document.createElement('span');
+      count.className = 'shop-count';
+      count.textContent = ' ×' + item.n;
+      text.appendChild(count);
+    }
+    const details = item.a && item.a.length ? item.a : (item.f ? [item.f] : []);
+    if (details.length) {
+      const src = document.createElement('span');
+      src.className = 'shop-src';
+      src.textContent = details.slice(0, 4).join('  ·  ') + (details.length > 4 ? '  +' + (details.length - 4) + ' more' : '');
+      text.appendChild(src);
+    }
+    const x = document.createElement('button');
+    x.className = 'shop-x';
+    x.textContent = '✕';
+    x.setAttribute('aria-label', 'Remove item');
+    x.addEventListener('click', () => {
+      const all = shop.load();
+      const idx = all.findIndex(i => i.t === item.t && !!i.d === !!item.d);
+      if (idx > -1) all.splice(idx, 1);
+      shop.save(all);
+      render();
+    });
+    li.appendChild(cb);
+    li.appendChild(text);
+    li.appendChild(x);
+    return li;
+  }
+
   function render() {
     const items = shop.load();
-    // unticked first, ticked at the bottom
-    const ordered = [...items.filter(i => !i.d), ...items.filter(i => i.d)];
     listEl.innerHTML = '';
-    ordered.forEach((item) => {
-      const li = document.createElement('li');
-      li.className = 'shop-item' + (item.d ? ' done' : '');
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = !!item.d;
-      cb.addEventListener('change', () => {
-        const all = shop.load();
-        const target = all.find(i => i.t === item.t && !!i.d === !!item.d);
-        if (target) target.d = cb.checked;
-        shop.save(all);
-        render();
-      });
-      const text = document.createElement('span');
-      text.className = 'shop-text';
-      text.textContent = item.t;
-      if ((item.n || 1) > 1) {
-        const count = document.createElement('span');
-        count.className = 'shop-count';
-        count.textContent = ' ×' + item.n;
-        text.appendChild(count);
-      }
-      if (item.f) {
-        const src = document.createElement('span');
-        src.className = 'shop-src';
-        src.textContent = item.f;
-        text.appendChild(src);
-      }
-      const x = document.createElement('button');
-      x.className = 'shop-x';
-      x.textContent = '✕';
-      x.setAttribute('aria-label', 'Remove item');
-      x.addEventListener('click', () => {
-        const all = shop.load();
-        const idx = all.findIndex(i => i.t === item.t && !!i.d === !!item.d);
-        if (idx > -1) all.splice(idx, 1);
-        shop.save(all);
-        render();
-      });
-      li.appendChild(cb);
-      li.appendChild(text);
-      li.appendChild(x);
-      listEl.appendChild(li);
+    const open = items.filter(i => !i.d);
+    const done = items.filter(i => i.d);
+    CATS.forEach(([key, label]) => {
+      const inCat = open.filter(i => (i.c || 'other') === key);
+      if (!inCat.length) return;
+      const h = document.createElement('h3');
+      h.className = 'shop-cat';
+      h.textContent = label;
+      listEl.appendChild(h);
+      const ul = document.createElement('ul');
+      ul.className = 'shop-list';
+      inCat.sort((a, b) => a.t.localeCompare(b.t)).forEach(i => ul.appendChild(itemRow(i)));
+      listEl.appendChild(ul);
     });
+    if (done.length) {
+      const h = document.createElement('h3');
+      h.className = 'shop-cat';
+      h.textContent = '✓ In the trolley';
+      listEl.appendChild(h);
+      const ul = document.createElement('ul');
+      ul.className = 'shop-list';
+      done.forEach(i => ul.appendChild(itemRow(i)));
+      listEl.appendChild(ul);
+    }
     emptyEl.style.display = items.length ? 'none' : '';
   }
 
@@ -179,8 +213,13 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('share-btn').addEventListener('click', async () => {
     const items = shop.load().filter(i => !i.d);
     if (!items.length) { toast('Nothing unticked to share.'); return; }
-    const text = 'Shopping list — The Shared Table\n\n'
-      + items.map(i => '• ' + i.t + ((i.n || 1) > 1 ? ' ×' + i.n : '')).join('\n');
+    const CAT_NAMES = Object.fromEntries(CATS);
+    let text = 'Shopping list — The Shared Table\n';
+    CATS.forEach(([key, label]) => {
+      const inCat = items.filter(i => (i.c || 'other') === key);
+      if (!inCat.length) return;
+      text += '\n' + label + '\n' + inCat.map(i => '• ' + i.t + ((i.n || 1) > 1 ? ' ×' + i.n : '')).join('\n') + '\n';
+    });
     if (navigator.share) {
       try { await navigator.share({ title: 'Shopping list', text }); return; } catch (_) { /* fall through */ }
     }

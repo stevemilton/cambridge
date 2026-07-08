@@ -883,3 +883,16 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
 .shop-item .shop-x:hover { color: var(--terracotta-deep); }
 .shop-count { font-weight: 700; color: var(--terracotta-deep); }
 .shop-empty { color: var(--ink-soft); margin-top: 1.4rem; }
+
+/* Shopping list category headers */
+.shop-cat {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+  border-bottom: 2px solid var(--gold);
+  display: inline-block;
+  padding-bottom: 0.2rem;
+  margin: 1.8rem 0 0.3rem;
+}
+.shop-list { margin-top: 0.2rem; }

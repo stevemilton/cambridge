@@ -119,7 +119,7 @@
     }
   });
 
-  // ---------- shopping list store ----------
+  // ---------- shopping list store & ingredient parser ----------
   const SHOP_KEY = 'tst-shop';
   function loadShop() {
     try { return JSON.parse(localStorage.getItem(SHOP_KEY) || '[]') || []; }
@@ -128,22 +128,131 @@
   function saveShop(items) { localStorage.setItem(SHOP_KEY, JSON.stringify(items)); }
   const normText = (t) => String(t).replace(/\s+/g, ' ').trim();
 
-  // Merge new entries into the list: same text (case-insensitive, not yet
-  // ticked) bumps the count instead of duplicating the line.
+  // Categories: meat, veg, dairy, grain, frozen, pantry, other.
+  // Keyword -> [canonical buyable name, category]. Matched longest-first, so
+  // "garlic powder" wins over "garlic", "peanut butter" over "butter", etc.
+  const ING_MAP = [
+    // meat & fish
+    ['chicken breast', 'chicken breast', 'meat'], ['chicken thigh', 'chicken thigh fillets', 'meat'],
+    ['turkey mince', 'turkey mince (2% fat)', 'meat'], ['smoked salmon', 'smoked salmon', 'meat'],
+    ['salmon', 'salmon fillets', 'meat'], ['prawn', 'raw king prawns', 'meat'],
+    ['sirloin', 'sirloin steaks', 'meat'], ['steak', 'sirloin steaks', 'meat'],
+    ['chicken', 'chicken breast', 'meat'],
+    // fruit & veg
+    ['cherry tomatoes', 'cherry tomatoes', 'veg'], ['tomato', 'tomatoes', 'veg'],
+    ['spring onion', 'spring onions', 'veg'], ['red onion', 'red onions', 'veg'], ['onion', 'onions', 'veg'],
+    ['garlic powder', 'garlic powder', 'pantry'], ['garlic', 'garlic', 'veg'],
+    ['red pepper', 'peppers', 'veg'], ['yellow pepper', 'peppers', 'veg'], ['peppers (mixed', 'peppers', 'veg'], ['pepper', 'peppers', 'veg'],
+    ['cucumber', 'cucumber', 'veg'], ['courgette', 'courgettes', 'veg'], ['carrot', 'carrots', 'veg'],
+    ['tenderstem', 'Tenderstem broccoli', 'veg'], ['broccoli', 'broccoli', 'veg'],
+    ['green beans', 'green beans', 'veg'], ['sugar snap', 'sugar snap peas', 'veg'],
+    ['black beans', 'black beans (tin)', 'pantry'], ['chickpea', 'chickpeas (tin)', 'pantry'],
+    ['little gem', 'Little Gem lettuce', 'veg'], ['lettuce', 'Little Gem lettuce', 'veg'],
+    ['spinach', 'baby spinach', 'veg'], ['rocket', 'rocket', 'veg'], ['red cabbage', 'red cabbage', 'veg'],
+    ['avocado', 'avocados', 'veg'], ['red chilli', 'fresh red chilli', 'veg'],
+    ['ginger', 'fresh ginger', 'veg'],
+    ['sweet potato', 'sweet potatoes', 'veg'], ['new potato', 'baby new potatoes', 'veg'],
+    ['baby potato', 'baby new potatoes', 'veg'], ['baby new potato', 'baby new potatoes', 'veg'], ['potato', 'potatoes', 'veg'],
+    ['lemon', 'lemons', 'veg'], ['lime', 'limes', 'veg'], ['apple', 'apples', 'veg'], ['banana', 'bananas', 'veg'],
+    ['blueberr', 'blueberries', 'veg'], ['raspberr', 'raspberries', 'veg'], ['berries', 'berries (fresh or frozen)', 'veg'],
+    ['dates', 'soft pitted dates', 'veg'], ['mushroom', 'mushrooms', 'veg'],
+    ['parsley', 'fresh parsley', 'veg'], ['mint', 'fresh mint', 'veg'], ['dill', 'fresh dill', 'veg'],
+    ['coriander', 'fresh coriander', 'veg'], ['basil', 'fresh basil', 'veg'],
+    ['rosemary', 'fresh rosemary', 'veg'], ['thyme', 'fresh thyme', 'veg'], ['chives', 'fresh chives', 'veg'],
+    // frozen
+    ['edamame', 'frozen edamame', 'frozen'], ['peas', 'frozen peas', 'frozen'], ['sweetcorn', 'sweetcorn', 'frozen'],
+    // dairy & eggs
+    ['greek yogurt', 'Greek yogurt', 'dairy'], ['yogurt', 'Greek yogurt', 'dairy'],
+    ['cottage cheese', 'cottage cheese', 'dairy'], ['halloumi', 'halloumi', 'dairy'],
+    ['cheddar', 'cheddar', 'dairy'], ['parmesan', 'parmesan', 'dairy'],
+    ['crème fraîche', 'half-fat crème fraîche', 'dairy'], ['creme fraiche', 'half-fat crème fraîche', 'dairy'],
+    ['milk', 'milk', 'dairy'], ['peanut butter', 'peanut butter (100% nuts)', 'pantry'], ['butter', 'butter', 'dairy'],
+    ['egg', 'eggs', 'dairy'],
+    // bakery & grains
+    ['pitta', 'wholemeal pittas', 'grain'], ['tortilla', 'wholemeal tortilla wraps', 'grain'], ['wrap', 'wholemeal tortilla wraps', 'grain'],
+    ['bun', 'wholemeal buns', 'grain'], ['bread', 'wholemeal bread', 'grain'],
+    ['rice', 'basmati rice', 'grain'], ['noodle', 'wholewheat noodles', 'grain'],
+    ['spaghetti', 'wholemeal spaghetti', 'grain'], ['penne', 'wholemeal penne', 'grain'], ['pasta', 'wholemeal pasta', 'grain'],
+    ['couscous', 'wholewheat couscous', 'grain'], ['oats', 'porridge oats', 'grain'],
+    ['panko', 'panko breadcrumbs', 'grain'], ['breadcrumb', 'panko breadcrumbs', 'grain'],
+    // store cupboard
+    ['extra virgin olive oil', 'olive oil', 'pantry'], ['olive oil', 'olive oil', 'pantry'], ['oil', 'olive oil', 'pantry'],
+    ['soy sauce', 'soy sauce', 'pantry'], ['soy', 'soy sauce', 'pantry'], ['honey', 'honey', 'pantry'],
+    ['red wine vinegar', 'red wine vinegar', 'pantry'], ['wine vinegar', 'red wine vinegar', 'pantry'],
+    ['balsamic', 'balsamic vinegar', 'pantry'], ['rice vinegar', 'rice vinegar', 'pantry'], ['vinegar', 'red wine vinegar', 'pantry'],
+    ['dijon', 'Dijon mustard', 'pantry'], ['mustard', 'Dijon mustard', 'pantry'],
+    ['sriracha', 'sriracha', 'pantry'], ['gherkin', 'gherkins', 'pantry'], ['olive', 'olives (jar)', 'pantry'],
+    ['anchov', 'anchovy fillets', 'pantry'],
+    ['peanuts', 'roasted peanuts', 'pantry'], ['sesame', 'sesame seeds', 'pantry'],
+    ['mixed seeds', 'mixed seeds', 'pantry'], ['seeds', 'mixed seeds', 'pantry'],
+    ['flaked almonds', 'flaked almonds', 'pantry'], ['almond', 'almonds', 'pantry'],
+    ['pistachio', 'pistachios', 'pantry'], ['walnut', 'walnuts', 'pantry'], ['sultana', 'sultanas', 'pantry'],
+    ['cocoa', 'cocoa powder', 'pantry'], ['chocolate chip', 'dark chocolate chips', 'pantry'],
+    ['dark chocolate', 'dark chocolate (70%)', 'pantry'], ['chocolate', 'dark chocolate (70%)', 'pantry'],
+    ['vanilla', 'vanilla extract', 'pantry'], ['baking powder', 'baking powder', 'pantry'],
+    ['bicarbonate', 'bicarbonate of soda', 'pantry'], ['cornflour', 'cornflour', 'pantry'], ['flour', 'plain flour', 'pantry'],
+    ['stock cube', 'stock cubes', 'pantry'], ['stock', 'stock cubes', 'pantry'],
+    ['granola', 'granola', 'pantry'],
+    ['smoked paprika', 'smoked paprika', 'pantry'], ['paprika', 'smoked paprika', 'pantry'],
+    ['cumin', 'ground cumin', 'pantry'], ['cinnamon', 'ground cinnamon', 'pantry'],
+    ['curry powder', 'mild curry powder', 'pantry'], ['turmeric', 'turmeric', 'pantry'],
+    ['cayenne', 'cayenne pepper', 'pantry'], ['chilli flakes', 'chilli flakes', 'pantry'],
+    ['oregano', 'dried oregano', 'pantry'], ['cajun', 'cajun spice mix', 'pantry'],
+  ].sort((a, b) => b[0].length - a[0].length);
+
+  const HERBS = ['parsley', 'mint', 'dill', 'coriander', 'basil', 'rosemary', 'thyme', 'chives'];
+
+  // Fragments that are seasoning noise, not shopping items.
+  function isSkippable(part) {
+    const c = part.toLowerCase().replace(/^[\d\s½¼¾×x.]*(g|kg|ml|tsp|tbsp|pinch( of)?|handful( of)?)?\s*/i, '').trim();
+    return /^((flaky |fine sea )?salt([ &,]+(coarse |black )?pepper)?|black pepper|pepper$|salt & black pepper|water)$/.test(c)
+      || /^(to serve|to finish|optional.*)$/.test(c);
+  }
+
+  // "½ cucumber + 150g cherry tomatoes + ¼ red onion (salad)" ->
+  // [{name:'cucumber',...}, {name:'cherry tomatoes',...}, {name:'red onions',...}]
+  function parseIngredient(text) {
+    const cleaned = normText(text).replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ');
+    const parts = cleaned.split(/\s*[+·]\s*/).map(normText).filter(Boolean);
+    const out = [];
+    parts.forEach((part) => {
+      if (isSkippable(part)) return;
+      const lower = part.toLowerCase();
+      const hit = ING_MAP.find(([k]) => lower.includes(k));
+      if (hit) {
+        out.push({ name: hit[1], cat: hit[2], raw: part });
+        // herb pairs like "parsley & dill" — pick up the extra herbs too
+        HERBS.forEach((h) => {
+          if (h !== hit[0] && !hit[1].toLowerCase().includes(h) && lower.includes(h)) {
+            out.push({ name: 'fresh ' + h, cat: 'veg', raw: part });
+          }
+        });
+      } else {
+        const fallback = part.replace(/^[\d\s½¼¾×x.]*(g|kg|ml|l|tsp|tbsp)?\s*/i, '').trim();
+        out.push({ name: fallback || part, cat: 'other', raw: part });
+      }
+    });
+    return out;
+  }
+
+  // Merge parsed ingredients into the list: one line per buyable item,
+  // recipe amounts collected underneath.
   function addToShop(entries) {
     const items = loadShop();
     let added = 0;
     entries.forEach((e) => {
-      const t = normText(e.t);
-      if (!t) return;
-      const existing = items.find((i) => !i.d && i.t.toLowerCase() === t.toLowerCase());
-      if (existing) {
-        existing.n = (existing.n || 1) + 1;
-        if (e.f && existing.f && existing.f.indexOf(e.f) === -1) existing.f += ' · ' + e.f;
-      } else {
-        items.push({ t, n: 1, d: false, f: e.f || '' });
-      }
-      added++;
+      parseIngredient(e.t).forEach((ing) => {
+        const existing = items.find((i) => !i.d && i.t.toLowerCase() === ing.name.toLowerCase());
+        const detail = ing.raw + (e.f ? ' — ' + e.f : '');
+        if (existing) {
+          existing.n = (existing.n || 1) + 1;
+          existing.a = existing.a || [];
+          if (existing.a.indexOf(detail) === -1) existing.a.push(detail);
+        } else {
+          items.push({ t: ing.name, c: ing.cat, n: 1, d: false, f: e.f || '', a: [detail] });
+        }
+        added++;
+      });
     });
     saveShop(items);
     return added;
