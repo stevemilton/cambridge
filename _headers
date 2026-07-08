@@ -1,0 +1,23 @@
+/*
+  X-Robots-Tag: index, follow
+
+# CSS/JS - 1 day cache. Versioned URLs (?v=N) bust on change; the 1-day
+# ceiling means a stale edge entry self-heals instead of sticking for a year.
+/*.css
+  Cache-Control: public, max-age=86400
+
+/*.js
+  Cache-Control: public, max-age=86400
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML pages - cache 1 hour browser, 1 day edge
+/
+  Cache-Control: public, max-age=3600, s-maxage=86400
+
+/*.html
+  Cache-Control: public, max-age=3600, s-maxage=86400
