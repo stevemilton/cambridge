@@ -119,6 +119,88 @@
     }
   });
 
+  // ---------- shopping list store ----------
+  const SHOP_KEY = 'tst-shop';
+  function loadShop() {
+    try { return JSON.parse(localStorage.getItem(SHOP_KEY) || '[]') || []; }
+    catch (_) { return []; }
+  }
+  function saveShop(items) { localStorage.setItem(SHOP_KEY, JSON.stringify(items)); }
+  const normText = (t) => String(t).replace(/\s+/g, ' ').trim();
+
+  // Merge new entries into the list: same text (case-insensitive, not yet
+  // ticked) bumps the count instead of duplicating the line.
+  function addToShop(entries) {
+    const items = loadShop();
+    let added = 0;
+    entries.forEach((e) => {
+      const t = normText(e.t);
+      if (!t) return;
+      const existing = items.find((i) => !i.d && i.t.toLowerCase() === t.toLowerCase());
+      if (existing) {
+        existing.n = (existing.n || 1) + 1;
+        if (e.f && existing.f && existing.f.indexOf(e.f) === -1) existing.f += ' · ' + e.f;
+      } else {
+        items.push({ t, n: 1, d: false, f: e.f || '' });
+      }
+      added++;
+    });
+    saveShop(items);
+    return added;
+  }
+
+  window.tstShop = { load: loadShop, save: saveShop, add: addToShop };
+  window.tstToast = toast;
+
+  // ---------- recipe pages: ingredient "+" and "Add all" buttons ----------
+  document.querySelectorAll('article.recipe[id]').forEach((article) => {
+    const h2 = article.querySelector('h2');
+    const recipeName = h2 ? normText(h2.textContent).split(' with ')[0].slice(0, 60) : '';
+    const box = article.querySelector('.ingredients');
+    if (!box) return;
+
+    box.querySelectorAll('li').forEach((li) => {
+      const btn = document.createElement('button');
+      btn.className = 'add-ing';
+      btn.type = 'button';
+      btn.textContent = '+';
+      btn.title = 'Add to shopping list';
+      btn.setAttribute('aria-label', 'Add ingredient to shopping list');
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const clone = li.cloneNode(true);
+        clone.querySelectorAll('button').forEach((b) => b.remove());
+        addToShop([{ t: clone.textContent, f: recipeName }]);
+        btn.classList.add('added');
+        btn.textContent = '✓';
+        setTimeout(() => { btn.classList.remove('added'); btn.textContent = '+'; }, 1500);
+        toast('Added to shopping list ✓ &nbsp;<a href="shopping.html">View list →</a>');
+      });
+      li.appendChild(btn);
+    });
+
+    const h3 = box.querySelector('h3');
+    if (h3) {
+      const all = document.createElement('button');
+      all.className = 'add-all-btn';
+      all.type = 'button';
+      all.textContent = '🛒 Add all';
+      all.title = 'Add every ingredient to the shopping list';
+      all.addEventListener('click', (e) => {
+        e.preventDefault();
+        const entries = [...box.querySelectorAll('li')].map((li) => {
+          const clone = li.cloneNode(true);
+          clone.querySelectorAll('button').forEach((b) => b.remove());
+          return { t: clone.textContent, f: recipeName };
+        });
+        const n = addToShop(entries);
+        toast(n + ' ingredients added ✓ &nbsp;<a href="shopping.html">View list →</a>');
+      });
+      h3.insertAdjacentElement('afterend', all);
+    }
+  });
+
   // ---------- filters (index page) ----------
   let current = 'all';
   const filterBox = document.getElementById('filters');

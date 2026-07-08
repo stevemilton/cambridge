@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopping List — The Shared Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=7">
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Site navigation">
+  <div class="wrap">
+    <a class="brand" href="index.html">The Shared Table</a>
+    <a class="nav-link" href="breakfasts.html">Breakfasts</a>
+    <a class="nav-link" href="lunches.html">Lunches</a>
+    <a class="nav-link" href="dinners.html">Dinners</a>
+    <a class="nav-link" href="treats.html">Treats</a>
+    <a class="nav-link" href="chef.html">AI Chef 🧑‍🍳</a>
+    <a class="nav-link" href="planner.html">Planner 📅</a>
+    <a class="nav-link" href="shopping.html" aria-current="page">Shopping 🛒</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="wrap">
+    <span class="eyebrow">The Trolley</span>
+    <h1>Shopping List</h1>
+    <p class="lede">Everything you&rsquo;ve added from recipes lands here — or build the whole week&rsquo;s list from the planner in one tap. Tick things off in the supermarket; the list saves itself on this device.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="shop-box">
+      <div class="planner-actions" style="margin-top:0;">
+        <button class="btn" id="from-plan-btn">📅 Add this week&rsquo;s plan</button>
+        <button class="btn secondary" id="share-btn">📤 Share / copy</button>
+        <button class="btn secondary" id="clear-done-btn">Clear ticked</button>
+        <button class="btn secondary" id="clear-all-btn">🗑 Clear all</button>
+      </div>
+
+      <div class="shop-add-row">
+        <input id="shop-input" type="text" autocomplete="off" placeholder="Add anything — kitchen roll, more coffee…" aria-label="Add an item">
+        <button class="btn" id="shop-add-btn">Add</button>
+      </div>
+
+      <ul class="shop-list" id="shop-list"></ul>
+      <p class="shop-empty" id="shop-empty">Nothing here yet — tap <strong>+</strong> next to any ingredient in a recipe, use <strong>🛒 Add all</strong>, or pull in the whole week from the planner above.</p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>The Shared Table · Family Recipes</span>
+    <span>Shopping List</span>
+  </div>
+</footer>
+
+<script src="recipes.js?v=1"></script>
+<script src="app.js?v=3" defer></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', function () {
+  const shop = window.tstShop;
+  const toast = window.tstToast;
+  const listEl = document.getElementById('shop-list');
+  const emptyEl = document.getElementById('shop-empty');
+  const input = document.getElementById('shop-input');
+  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+
+  function render() {
+    const items = shop.load();
+    // unticked first, ticked at the bottom
+    const ordered = [...items.filter(i => !i.d), ...items.filter(i => i.d)];
+    listEl.innerHTML = '';
+    ordered.forEach((item) => {
+      const li = document.createElement('li');
+      li.className = 'shop-item' + (item.d ? ' done' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!item.d;
+      cb.addEventListener('change', () => {
+        const all = shop.load();
+        const target = all.find(i => i.t === item.t && !!i.d === !!item.d);
+        if (target) target.d = cb.checked;
+        shop.save(all);
+        render();
+      });
+      const text = document.createElement('span');
+      text.className = 'shop-text';
+      text.textContent = item.t;
+      if ((item.n || 1) > 1) {
+        const count = document.createElement('span');
+        count.className = 'shop-count';
+        count.textContent = ' ×' + item.n;
+        text.appendChild(count);
+      }
+      if (item.f) {
+        const src = document.createElement('span');
+        src.className = 'shop-src';
+        src.textContent = item.f;
+        text.appendChild(src);
+      }
+      const x = document.createElement('button');
+      x.className = 'shop-x';
+      x.textContent = '✕';
+      x.setAttribute('aria-label', 'Remove item');
+      x.addEventListener('click', () => {
+        const all = shop.load();
+        const idx = all.findIndex(i => i.t === item.t && !!i.d === !!item.d);
+        if (idx > -1) all.splice(idx, 1);
+        shop.save(all);
+        render();
+      });
+      li.appendChild(cb);
+      li.appendChild(text);
+      li.appendChild(x);
+      listEl.appendChild(li);
+    });
+    emptyEl.style.display = items.length ? 'none' : '';
+  }
+
+  function addManual() {
+    const v = input.value.trim();
+    if (!v) return;
+    shop.add([{ t: v, f: '' }]);
+    input.value = '';
+    render();
+  }
+  document.getElementById('shop-add-btn').addEventListener('click', addManual);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') addManual(); });
+
+  // Build the list from this week's plan: fetch each planned recipe's page
+  // and lift its exact ingredient lines.
+  document.getElementById('from-plan-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('from-plan-btn');
+    const plan = window.tstPlan.loadPlan();
+    const ids = [...new Set(window.tstPlan.DAYS.flatMap(d => Object.values(plan[d] || {})))].filter(id => byId[id]);
+    if (!ids.length) {
+      toast('The planner is empty — <a href="planner.html">plan some meals first →</a>');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Gathering ingredients…';
+    try {
+      const pages = [...new Set(ids.map(id => byId[id].url.split('#')[0]))];
+      const docs = {};
+      await Promise.all(pages.map(async (p) => {
+        const html = await (await fetch(p)).text();
+        docs[p] = new DOMParser().parseFromString(html, 'text/html');
+      }));
+      const entries = [];
+      ids.forEach((id) => {
+        const r = byId[id];
+        const doc = docs[r.url.split('#')[0]];
+        const article = doc && doc.getElementById(id);
+        if (!article) return;
+        article.querySelectorAll('.ingredients li').forEach((li) => {
+          entries.push({ t: li.textContent, f: r.title });
+        });
+      });
+      const n = shop.add(entries);
+      render();
+      toast(n + ' ingredients added from ' + ids.length + ' planned meals ✓');
+    } catch (err) {
+      toast('Couldn&rsquo;t gather the ingredients — try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📅 Add this week’s plan';
+    }
+  });
+
+  // Share / copy
+  document.getElementById('share-btn').addEventListener('click', async () => {
+    const items = shop.load().filter(i => !i.d);
+    if (!items.length) { toast('Nothing unticked to share.'); return; }
+    const text = 'Shopping list — The Shared Table\n\n'
+      + items.map(i => '• ' + i.t + ((i.n || 1) > 1 ? ' ×' + i.n : '')).join('\n');
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Shopping list', text }); return; } catch (_) { /* fall through */ }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('List copied to clipboard ✓');
+    } catch (_) {
+      toast('Couldn&rsquo;t copy automatically — select and copy the list by hand.');
+    }
+  });
+
+  document.getElementById('clear-done-btn').addEventListener('click', () => {
+    shop.save(shop.load().filter(i => !i.d));
+    render();
+  });
+  document.getElementById('clear-all-btn').addEventListener('click', () => {
+    if (confirm('Clear the whole shopping list?')) { shop.save([]); render(); }
+  });
+
+  render();
+});
+</script>
+</body>
+</html>

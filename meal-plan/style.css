@@ -797,3 +797,89 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
   .recipe .plan-btn { top: 1.1rem; right: 4.1rem; }
   .plan-pop { top: 4rem; right: 1.1rem; }
 }
+
+/* ---------- Shopping list ---------- */
+
+.ingredients li { position: relative; padding-right: 2.2rem; }
+.add-ing {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--cream);
+  color: var(--olive-deep);
+  font: 700 0.95rem/1 var(--sans);
+  cursor: pointer;
+}
+.add-ing:hover { background: var(--sage); border-color: var(--olive); }
+.add-ing.added { background: var(--olive); border-color: var(--olive); color: #fff; }
+
+.add-all-btn {
+  display: inline-block;
+  margin: 0 0 0.8rem 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 999px;
+  font: 600 0.78rem var(--sans);
+  color: var(--olive-deep);
+  padding: 0.25rem 0.8rem;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.add-all-btn:hover { border-color: var(--olive); background: var(--sage); }
+
+.shop-box {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: clamp(1.4rem, 3.5vw, 2.4rem);
+  margin-top: 2rem;
+}
+
+.shop-add-row { display: flex; gap: 0.6rem; margin-top: 1rem; }
+.shop-add-row input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--cream);
+  font: 400 1rem var(--sans);
+  color: var(--ink);
+  padding: 0.6rem 0.9rem;
+  outline: none;
+}
+.shop-add-row input:focus { border-color: var(--olive); }
+
+.shop-list { list-style: none; padding: 0; margin-top: 1.4rem; }
+.shop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dotted var(--line);
+}
+.shop-item input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.2rem;
+  accent-color: var(--olive);
+  cursor: pointer;
+}
+.shop-item .shop-text { flex: 1; font-size: 0.97rem; }
+.shop-item .shop-src { display: block; font-size: 0.75rem; color: var(--ink-soft); }
+.shop-item.done .shop-text { text-decoration: line-through; color: var(--ink-soft); }
+.shop-item .shop-x {
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+.shop-item .shop-x:hover { color: var(--terracotta-deep); }
+.shop-count { font-weight: 700; color: var(--terracotta-deep); }
+.shop-empty { color: var(--ink-soft); margin-top: 1.4rem; }
