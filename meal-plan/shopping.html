@@ -63,18 +63,23 @@
   </div>
 </footer>
 
-<script src="recipes.js?v=1"></script>
+<script src="recipes.js?v=2"></script>
 <script src="app.js?v=6" defer></script>
 <script defer>
 document.addEventListener('DOMContentLoaded', function () {
-  // Recover from a stale/poisoned cached app.js: fetch a fresh copy once.
-  if (!window.tstShop || !window.tstFamily) {
+  // Recover from stale/poisoned cached scripts: re-fetch fresh copies once.
+  if (!window.tstShop || !window.tstFamily || !Array.isArray(window.RECIPES)) {
     if (!window.__tstRetried) {
       window.__tstRetried = true;
-      const fresh = document.createElement('script');
-      fresh.src = 'app.js?fresh=' + Date.now();
-      fresh.onload = () => document.dispatchEvent(new Event('DOMContentLoaded'));
-      document.head.appendChild(fresh);
+      let pending = 2;
+      const done = () => { if (--pending === 0) document.dispatchEvent(new Event('DOMContentLoaded')); };
+      ['app.js', 'recipes.js'].forEach((src) => {
+        const fresh = document.createElement('script');
+        fresh.src = src + '?fresh=' + Date.now();
+        fresh.onload = done;
+        fresh.onerror = done;
+        document.head.appendChild(fresh);
+      });
     }
     return;
   }
@@ -83,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const listEl = document.getElementById('shop-list');
   const emptyEl = document.getElementById('shop-empty');
   const input = document.getElementById('shop-input');
-  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+  const byId = Object.fromEntries((window.RECIPES || []).map(r => [r.id, r]));
 
   const CATS = [
     ['meat', '🥩 Meat & Fish'],
@@ -251,7 +256,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirm('Clear the whole shopping list?')) { shop.save([]); render(); }
   });
 
-  render();
+  try { render(); } catch (err) {
+    const el = document.getElementById('shop-empty');
+    if (el) { el.style.display = ''; el.textContent = 'Something went wrong drawing the list — please refresh. (' + err.message + ')'; }
+    throw err;
+  }
 
   // The list is drawn from localStorage once on load — but browsers restore
   // this page from the back/forward cache without re-running scripts, so

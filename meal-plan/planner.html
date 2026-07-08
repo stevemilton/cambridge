@@ -66,23 +66,28 @@
   </div>
 </footer>
 
-<script src="recipes.js?v=1"></script>
+<script src="recipes.js?v=2"></script>
 <script src="app.js?v=6" defer></script>
 <script defer>
 document.addEventListener('DOMContentLoaded', function () {
-  // Recover from a stale/poisoned cached app.js: fetch a fresh copy once.
-  if (!window.tstShop || !window.tstFamily) {
+  // Recover from stale/poisoned cached scripts: re-fetch fresh copies once.
+  if (!window.tstShop || !window.tstFamily || !Array.isArray(window.RECIPES)) {
     if (!window.__tstRetried) {
       window.__tstRetried = true;
-      const fresh = document.createElement('script');
-      fresh.src = 'app.js?fresh=' + Date.now();
-      fresh.onload = () => document.dispatchEvent(new Event('DOMContentLoaded'));
-      document.head.appendChild(fresh);
+      let pending = 2;
+      const done = () => { if (--pending === 0) document.dispatchEvent(new Event('DOMContentLoaded')); };
+      ['app.js', 'recipes.js'].forEach((src) => {
+        const fresh = document.createElement('script');
+        fresh.src = src + '?fresh=' + Date.now();
+        fresh.onload = done;
+        fresh.onerror = done;
+        document.head.appendChild(fresh);
+      });
     }
     return;
   }
   const { loadPlan, savePlan, DAYS, DAY_NAMES } = window.tstPlan;
-  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+  const byId = Object.fromEntries((window.RECIPES || []).map(r => [r.id, r]));
   const SLOTS = [
     { key: 'breakfast', label: '☀️ Breakfast', cat: 'breakfast', start: [7, 30], end: [8, 0] },
     { key: 'lunch', label: '🥗 Lunch', cat: 'lunch', start: [13, 0], end: [13, 30] },
@@ -141,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
         none.value = '';
         none.textContent = '—';
         sel.appendChild(none);
-        window.RECIPES.filter(r => r.cat === slot.cat).forEach((r) => {
+        (window.RECIPES || []).filter(r => r.cat === slot.cat).forEach((r) => {
           const o = document.createElement('option');
           o.value = r.id;
           o.textContent = r.emoji + ' ' + r.title;
@@ -193,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('autofill-btn').addEventListener('click', () => {
     const plan = loadPlan();
     const pools = {};
-    SLOTS.forEach(s => { pools[s.cat] = shuffle(window.RECIPES.filter(r => r.cat === s.cat).map(r => r.id)); });
+    SLOTS.forEach(s => { pools[s.cat] = shuffle((window.RECIPES || []).filter(r => r.cat === s.cat).map(r => r.id)); });
     const used = new Set(DAYS.flatMap(d => Object.values(plan[d] || {})));
     DAYS.forEach((day, i) => {
       plan[day] = plan[day] || {};

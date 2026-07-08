@@ -78,7 +78,7 @@
   </div>
 </footer>
 
-<script src="recipes.js?v=1"></script>
+<script src="recipes.js?v=2"></script>
 <script src="app.js?v=6" defer></script>
 <script>
 (function () {
@@ -91,7 +91,7 @@
   const aiResult = document.getElementById('ai-result');
   const localSection = document.getElementById('local-results');
   const matchCards = document.getElementById('match-cards');
-  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+  const byId = Object.fromEntries((window.RECIPES || []).map(r => [r.id, r]));
 
   function refresh() {
     chipRow.querySelectorAll('.chip').forEach(c => c.remove());
@@ -161,7 +161,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ingredients: ings,
-          catalog: window.RECIPES.map(r => ({ id: r.id, title: r.title, ing: r.ing.join(', ') })),
+          catalog: (window.RECIPES || []).map(r => ({ id: r.id, title: r.title, ing: r.ing.join(', ') })),
         }),
       });
       const data = await res.json().catch(() => null);
