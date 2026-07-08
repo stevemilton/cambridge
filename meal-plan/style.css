@@ -871,7 +871,7 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
 }
 .shop-item .shop-text { flex: 1; font-size: 0.97rem; }
 .shop-item .shop-src { display: block; font-size: 0.75rem; color: var(--ink-soft); }
-.shop-item.done .shop-text { text-decoration: line-through; color: var(--ink-soft); }
+.shop-item.done .shop-text { color: var(--ink-soft); opacity: 0.75; }
 .shop-item .shop-x {
   border: none;
   background: none;
