@@ -675,3 +675,114 @@ td.day, th.day { font-weight: 700; color: var(--olive-deep); white-space: nowrap
 .ai-panel .ai-idea { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #c6d0b2; font-size: 0.95rem; }
 .ai-loading { display: inline-block; animation: chef-pulse 1.2s ease-in-out infinite; }
 @keyframes chef-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+/* ---------- Weekly planner ---------- */
+
+.week-toggle { display: flex; gap: 0.5rem; margin-top: 1.2rem; }
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.8rem;
+}
+
+.day-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+.day-card.today { border-color: var(--gold); box-shadow: 0 2px 24px rgba(201, 162, 39, 0.25); }
+.day-card h3 { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.15rem; margin-bottom: 0.7rem; }
+.day-card h3 .day-date { font-family: var(--sans); font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); }
+
+.slot { padding: 0.5rem 0; border-top: 1px dotted var(--line); }
+.slot-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--terracotta-deep);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.slot select {
+  width: 100%;
+  font: 500 0.9rem var(--sans);
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 0.45rem 0.5rem;
+}
+.slot-links { display: flex; gap: 0.9rem; margin-top: 0.35rem; font-size: 0.8rem; }
+.slot-links a { text-decoration: none; font-weight: 600; }
+
+.planner-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.8rem; align-items: center; }
+
+/* ---------- Add-to-plan popover & toast ---------- */
+
+.plan-btn {
+  position: absolute;
+  top: 1.2rem;
+  right: 4.2rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font: 600 0.85rem var(--sans);
+  padding: 0 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  z-index: 2;
+}
+.plan-btn:hover { color: var(--olive-deep); border-color: var(--olive); }
+
+.plan-pop {
+  position: absolute;
+  top: 4.2rem;
+  right: 1.2rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(60, 50, 30, 0.18);
+  padding: 0.8rem;
+  z-index: 20;
+  width: 220px;
+}
+.plan-pop h5 { font: 700 0.78rem var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.5rem; }
+.plan-pop .pop-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.35rem; }
+.plan-pop button {
+  border: 1px solid var(--line);
+  background: var(--cream);
+  border-radius: 8px;
+  font: 600 0.78rem var(--sans);
+  color: var(--ink);
+  padding: 0.35rem 0;
+  cursor: pointer;
+}
+.plan-pop button:hover { background: var(--sage); border-color: var(--olive); }
+
+.toast {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--olive-deep);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font: 600 0.9rem var(--sans);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { opacity: 1; pointer-events: auto; }
+.toast a { color: #ffe9a8; }

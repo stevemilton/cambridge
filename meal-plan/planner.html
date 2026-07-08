@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Planner — The Shared Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Site navigation">
+  <div class="wrap">
+    <a class="brand" href="index.html">The Shared Table</a>
+    <a class="nav-link" href="breakfasts.html">Breakfasts</a>
+    <a class="nav-link" href="lunches.html">Lunches</a>
+    <a class="nav-link" href="dinners.html">Dinners</a>
+    <a class="nav-link" href="treats.html">Treats</a>
+    <a class="nav-link" href="chef.html">AI Chef 🧑‍🍳</a>
+    <a class="nav-link" href="planner.html" aria-current="page">Planner 📅</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="wrap">
+    <span class="eyebrow">This Week</span>
+    <h1>Weekly Planner</h1>
+    <p class="lede">Pick a meal for each slot — or hit auto-fill and argue about it after. Every planned meal gets a one-click <strong>Add to Google Calendar</strong> link, and the whole week downloads as a calendar file (.ics) that imports into Google, Apple or Outlook in one go. The plan saves itself on this device.</p>
+    <div class="week-toggle filters" id="week-toggle">
+      <button class="filter-btn active" data-week="0">This week</button>
+      <button class="filter-btn" data-week="1">Next week</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="planner-grid" id="planner"></div>
+
+    <div class="planner-actions">
+      <button class="btn" id="ics-btn">⬇️ Download week (.ics)</button>
+      <button class="btn secondary" id="autofill-btn">✨ Auto-fill empty slots</button>
+      <button class="btn secondary" id="clear-btn">🗑 Clear week</button>
+    </div>
+
+    <section class="section">
+      <h2>Getting it into Google Calendar</h2>
+      <div class="callout">
+        <h4>Two ways, no accounts needed</h4>
+        <p><strong>One meal:</strong> tap “+ GCal” under any planned slot — it opens Google Calendar with the event pre-filled (meal, day, time, and a link back to the recipe); just hit save. <strong>The whole week:</strong> download the .ics file and import it at <em>Google Calendar → Settings → Import &amp; export</em> — all planned meals land at once (breakfast 7:30, lunch 1:00, dinner 7:00, treats 8:30). The file also opens directly in Apple Calendar and Outlook.</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>The Shared Table · Family Recipes</span>
+    <span>Weekly Planner</span>
+  </div>
+</footer>
+
+<script src="recipes.js?v=1"></script>
+<script src="app.js?v=2" defer></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', function () {
+  const { loadPlan, savePlan, DAYS, DAY_NAMES } = window.tstPlan;
+  const byId = Object.fromEntries(window.RECIPES.map(r => [r.id, r]));
+  const SLOTS = [
+    { key: 'breakfast', label: '☀️ Breakfast', cat: 'breakfast', start: [7, 30], end: [8, 0] },
+    { key: 'lunch', label: '🥗 Lunch', cat: 'lunch', start: [13, 0], end: [13, 30] },
+    { key: 'dinner', label: '🍽️ Dinner', cat: 'dinner', start: [19, 0], end: [19, 45] },
+    { key: 'treat', label: '🍫 Treat (optional)', cat: 'treat', start: [20, 30], end: [20, 45] },
+  ];
+  let weekOffset = 0;
+
+  function mondayOf(offsetWeeks) {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + offsetWeeks * 7);
+    return d;
+  }
+  function dateFor(dayIdx) {
+    const d = mondayOf(weekOffset);
+    d.setDate(d.getDate() + dayIdx);
+    return d;
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = (d, hm) => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(hm[0]) + pad(hm[1]) + '00';
+
+  function gcalLink(recipe, slot, date) {
+    const title = slot.label.replace(/^[^ ]+ /, '').replace(' (optional)', '') + ': ' + recipe.title;
+    const details = 'Recipe: https://cambridgetech.ai/meal-plan/' + recipe.url + '\nFrom The Shared Table weekly planner.';
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+      + '&text=' + encodeURIComponent(recipe.emoji + ' ' + title)
+      + '&dates=' + stamp(date, slot.start) + '/' + stamp(date, slot.end)
+      + '&details=' + encodeURIComponent(details);
+  }
+
+  function render() {
+    const plan = loadPlan();
+    const grid = document.getElementById('planner');
+    grid.innerHTML = '';
+    const todayKey = new Date().toDateString();
+    DAYS.forEach((day, i) => {
+      const date = dateFor(i);
+      const card = document.createElement('div');
+      card.className = 'day-card' + (date.toDateString() === todayKey ? ' today' : '');
+      const h = document.createElement('h3');
+      h.innerHTML = DAY_NAMES[day] + '<span class="day-date">' + date.getDate() + ' ' + date.toLocaleString('en-GB', { month: 'short' }) + '</span>';
+      card.appendChild(h);
+
+      SLOTS.forEach((slot) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'slot';
+        const label = document.createElement('span');
+        label.className = 'slot-label';
+        label.textContent = slot.label;
+        wrap.appendChild(label);
+
+        const sel = document.createElement('select');
+        sel.setAttribute('aria-label', DAY_NAMES[day] + ' ' + slot.key);
+        const none = document.createElement('option');
+        none.value = '';
+        none.textContent = '—';
+        sel.appendChild(none);
+        window.RECIPES.filter(r => r.cat === slot.cat).forEach((r) => {
+          const o = document.createElement('option');
+          o.value = r.id;
+          o.textContent = r.emoji + ' ' + r.title;
+          sel.appendChild(o);
+        });
+        const chosen = plan[day] && plan[day][slot.key];
+        if (chosen && byId[chosen]) sel.value = chosen;
+        sel.addEventListener('change', () => {
+          const p = loadPlan();
+          p[day] = p[day] || {};
+          if (sel.value) p[day][slot.key] = sel.value; else delete p[day][slot.key];
+          savePlan(p);
+          render();
+        });
+        wrap.appendChild(sel);
+
+        if (chosen && byId[chosen]) {
+          const links = document.createElement('div');
+          links.className = 'slot-links';
+          const view = document.createElement('a');
+          view.href = byId[chosen].url;
+          view.textContent = 'Recipe →';
+          const gc = document.createElement('a');
+          gc.href = gcalLink(byId[chosen], slot, date);
+          gc.target = '_blank';
+          gc.rel = 'noopener';
+          gc.textContent = '+ GCal';
+          links.appendChild(view);
+          links.appendChild(gc);
+          wrap.appendChild(links);
+        }
+        card.appendChild(wrap);
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  // Week toggle
+  document.getElementById('week-toggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('#week-toggle .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    weekOffset = Number(btn.dataset.week);
+    render();
+  });
+
+  // Auto-fill: random picks without repeats; treats only Fri-Sun
+  document.getElementById('autofill-btn').addEventListener('click', () => {
+    const plan = loadPlan();
+    const pools = {};
+    SLOTS.forEach(s => { pools[s.cat] = shuffle(window.RECIPES.filter(r => r.cat === s.cat).map(r => r.id)); });
+    const used = new Set(DAYS.flatMap(d => Object.values(plan[d] || {})));
+    DAYS.forEach((day, i) => {
+      plan[day] = plan[day] || {};
+      SLOTS.forEach((slot) => {
+        if (slot.key === 'treat' && i < 4) return;
+        if (plan[day][slot.key]) return;
+        let pool = pools[slot.cat].filter(id => !used.has(id));
+        if (!pool.length) pool = pools[slot.cat];
+        const pick = pool[0];
+        pools[slot.cat] = pools[slot.cat].filter(id => id !== pick).concat(pick);
+        used.add(pick);
+        plan[day][slot.key] = pick;
+      });
+    });
+    savePlan(plan);
+    render();
+  });
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    if (confirm('Clear the whole week?')) { savePlan({}); render(); }
+  });
+
+  // ICS export
+  document.getElementById('ics-btn').addEventListener('click', () => {
+    const plan = loadPlan();
+    const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,');
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//The Shared Table//Weekly Planner//EN', 'CALSCALE:GREGORIAN'];
+    let count = 0;
+    DAYS.forEach((day, i) => {
+      const date = dateFor(i);
+      SLOTS.forEach((slot) => {
+        const id = plan[day] && plan[day][slot.key];
+        const r = id && byId[id];
+        if (!r) return;
+        count++;
+        const mealName = slot.label.replace(/^[^ ]+ /, '').replace(' (optional)', '');
+        lines.push(
+          'BEGIN:VEVENT',
+          'UID:tst-' + stamp(date, slot.start) + '-' + id + '@cambridgetech.ai',
+          'DTSTAMP:' + stamp(new Date(), [0, 0]) + 'Z',
+          'DTSTART:' + stamp(date, slot.start),
+          'DTEND:' + stamp(date, slot.end),
+          'SUMMARY:' + esc(r.emoji + ' ' + mealName + ': ' + r.title),
+          'DESCRIPTION:' + esc('Recipe: https://cambridgetech.ai/meal-plan/' + r.url),
+          'URL:https://cambridgetech.ai/meal-plan/' + r.url,
+          'END:VEVENT'
+        );
+      });
+    });
+    lines.push('END:VCALENDAR');
+    if (!count) { alert('Plan at least one meal first.'); return; }
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const mon = mondayOf(weekOffset);
+    a.download = 'shared-table-week-' + mon.getFullYear() + pad(mon.getMonth() + 1) + pad(mon.getDate()) + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  render();
+});
+</script>
+</body>
+</html>
