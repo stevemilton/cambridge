@@ -58,3 +58,68 @@ Checked against the brief rather than assumed from job status:
 - Confirmed visually: both gate labels legible, counter `1` to `5`, five blue
   players after the gate, a single ball throughout, keeper dive and miss, net
   ripple, confetti, `GOAL!` plus three gold stars
+
+---
+
+# Waitlist Landing Page
+
+`index.html` — a mobile-first landing page for the concept, published at
+<https://cambridgetech.ai/arcade-football/>. Built as the destination for a
+paid creative test: run the video as an ad, measure what it costs to get a
+click and a signup, and only build the game if those numbers hold up.
+
+Working title is **Squad Rush** — a placeholder. It has not been checked for
+trademark or App Store name conflicts.
+
+## Before sending any paid traffic
+
+The waitlist does not store anything yet. `CONFIG.WAITLIST_ENDPOINT` in
+`index.html` is `null`, and while it is, the form tells visitors the waitlist
+isn't open rather than claiming a signup it can't honour — so the page is
+honest as it stands, but it will not collect a single address.
+
+To switch it on, set the endpoint to any backend that accepts a POST of
+`{email, source, position, ts}` as JSON:
+
+```js
+WAITLIST_ENDPOINT: "https://formspree.io/f/xxxxxxxx"
+```
+
+Formspree, Formspark and Basin all work on their free tiers and need no
+server. A Supabase edge function or any serverless handler works equally well.
+
+## Analytics
+
+`track()` forwards events to Meta Pixel (`fbq`), GA4 (`gtag`) and `dataLayer`
+if any are present, and no-ops otherwise. Drop a pixel snippet into `<head>`
+and these start reporting with no other changes:
+
+| Event | Fires when |
+|---|---|
+| `VideoWatch3s` | Hero video passes 3 seconds |
+| `VideoUnmute` | Visitor turns sound on |
+| `WaitlistSubmit` | Valid email submitted |
+| `WaitlistSuccess` | Backend accepted the signup |
+| `WaitlistError` | Backend rejected or failed |
+
+The funnel to watch is ad click -> `VideoWatch3s` -> `WaitlistSubmit`.
+
+## Assets
+
+| File | Purpose |
+|---|---|
+| `arcade-football-20s-9x16.mp4` | Full-quality master, 15MB — the ad creative |
+| `hero-loop.mp4` | 720p web loop, 3.3MB — the page hero |
+| `hero-poster.jpg` | Poster frame shown before the video plays |
+| `storyboard-*.jpg` | Gameplay stills used in the page |
+
+The hero is a separate, smaller encode on purpose: the 15MB master is fine as
+an ad upload but far too heavy for a landing page on mobile data, where load
+time feeds straight into bounce rate.
+
+## Checked
+
+Rendered in Chromium at 360 / 390 / 768 / 1280px: no horizontal overflow at
+any width, no JavaScript errors, and the gameplay video sits within the first
+screen on mobile — traffic arrives from a video ad, so the footage has to land
+before the fold rather than below the copy.

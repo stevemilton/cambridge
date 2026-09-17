@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Squad Rush</title>
+<meta name="description" content="Pick a gate. Build your squad. Score. A fast arcade football runner — coming soon to iOS and Android.">
+
+<meta property="og:title" content="Squad Rush — pick a gate, build your squad, score">
+<meta property="og:description" content="A fast arcade football runner. Coming soon to iOS and Android.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://cambridgetech.ai/arcade-football/hero-poster.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#060b14;
+  --bg-2:#0b1424;
+  --surface:#111d31;
+  --line:rgba(255,255,255,.12);
+  --text:#eef4ff;
+  --muted:#93a4bf;
+  --grass:#25d366;
+  --grass-deep:#12a750;
+  --gold:#ffc531;
+  --kit-blue:#3b7bff;
+  --kit-red:#e5484d;
+  --radius:16px;
+  --maxw:1080px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Outfit",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  line-height:1.55;
+  overflow-x:hidden;
+}
+img,video{max-width:100%;display:block}
+a{color:inherit}
+
+.display{
+  /* Condensed fallbacks matter: the sizes below are tuned for a narrow
+     face, and a wide fallback would otherwise overflow the headline. */
+  font-family:"Bebas Neue","Haettenschweiler","Arial Narrow",Impact,
+              system-ui,sans-serif;
+  font-weight:400;
+  letter-spacing:.02em;
+  line-height:.95;
+  text-transform:uppercase;
+}
+
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 16px}
+
+/* ---------- glow backdrop ---------- */
+.backdrop{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.backdrop::before,.backdrop::after{
+  content:"";position:absolute;border-radius:50%;filter:blur(90px);opacity:.5
+}
+.backdrop::before{
+  width:70vw;height:70vw;max-width:620px;max-height:620px;
+  top:-18vw;left:-14vw;background:radial-gradient(circle,rgba(37,211,102,.55),transparent 70%)
+}
+.backdrop::after{
+  width:64vw;height:64vw;max-width:560px;max-height:560px;
+  top:22vh;right:-20vw;background:radial-gradient(circle,rgba(59,123,255,.42),transparent 70%)
+}
+
+/* ---------- header ---------- */
+header{padding:22px 0 8px}
+.brand{display:flex;align-items:center;gap:9px;font-size:1.32rem}
+.brand .dot{
+  width:11px;height:11px;border-radius:50%;background:var(--grass);
+  box-shadow:0 0 14px var(--grass);flex:none
+}
+
+/* ---------- hero ---------- */
+.hero{padding:18px 0 8px}
+/* Mobile order: headline -> gameplay video -> pitch + form.
+   Traffic arrives from a video ad, so the footage must land early. */
+.hero-grid{
+  display:grid;gap:22px;
+  grid-template-areas:"head" "phone" "actions";
+}
+.hero-head{grid-area:head}
+.phone-col{grid-area:phone}
+.hero-actions{grid-area:actions}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.72rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--grass);
+  background:rgba(37,211,102,.1);
+  border:1px solid rgba(37,211,102,.28);
+  border-radius:999px;padding:6px 13px;margin:0 0 16px
+}
+h1{font-size:clamp(2.6rem,9.5vw,4.6rem);margin:0 0 14px}
+h1 .hl{color:var(--gold)}
+.lede{font-size:clamp(.98rem,3.9vw,1.2rem);color:var(--muted);margin:0 0 22px;max-width:38ch}
+
+/* phone frame */
+.phone{
+  width:min(280px,76vw);margin:0 auto;position:relative;
+  border-radius:34px;padding:9px;
+  background:linear-gradient(170deg,#25334c,#0d1626);
+  box-shadow:0 26px 60px -18px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.07);
+}
+.phone video{
+  width:100%;aspect-ratio:9/16;object-fit:cover;
+  border-radius:26px;background:#0a1220;
+}
+.sound-btn{
+  position:absolute;right:16px;bottom:16px;
+  width:42px;height:42px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(6,11,20,.72);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:#fff;font-size:1.05rem;cursor:pointer;
+  display:grid;place-items:center;
+  transition:transform .15s ease,background .15s ease;
+}
+.sound-btn:hover{background:rgba(6,11,20,.92);transform:scale(1.06)}
+.sound-btn:focus-visible{outline:2px solid var(--grass);outline-offset:3px}
+
+/* ---------- waitlist ---------- */
+.signup{margin-top:4px}
+.field{display:flex;gap:9px;flex-wrap:wrap}
+input[type="email"]{
+  flex:1 1 210px;min-width:0;
+  padding:15px 17px;font:inherit;font-size:1rem;color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;
+}
+input[type="email"]::placeholder{color:#63748f}
+input[type="email"]:focus{outline:none;border-color:var(--grass);box-shadow:0 0 0 3px rgba(37,211,102,.2)}
+.btn{
+  flex:0 0 auto;padding:15px 26px;font:inherit;font-weight:800;font-size:1rem;
+  color:#04180c;cursor:pointer;white-space:nowrap;
+  background:linear-gradient(180deg,var(--grass),var(--grass-deep));
+  border:0;border-radius:12px;
+  box-shadow:0 8px 22px -8px rgba(37,211,102,.75);
+  transition:transform .13s ease,filter .13s ease;
+}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.07)}
+.btn:active{transform:translateY(0)}
+.btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.btn[disabled]{opacity:.6;cursor:default;transform:none}
+.microcopy{font-size:.83rem;color:var(--muted);margin:11px 0 0}
+
+.note{
+  margin:13px 0 0;padding:12px 14px;border-radius:11px;font-size:.88rem;
+  display:none;
+}
+.note.show{display:block}
+.note.ok{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.35);color:#a9f0c6}
+.note.warn{background:rgba(255,197,49,.1);border:1px solid rgba(255,197,49,.35);color:#ffdd8f}
+.note.err{background:rgba(229,72,77,.11);border:1px solid rgba(229,72,77,.36);color:#ffb3b5}
+
+.stores{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0 0}
+.store{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 15px;border-radius:11px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  font-size:.82rem;color:var(--muted);
+}
+
+/* ---------- how it plays ---------- */
+section{padding:54px 0}
+.sec-head{margin:0 0 26px}
+.sec-head h2{font-size:clamp(1.85rem,7.5vw,2.9rem);margin:0 0 8px}
+.sec-head p{color:var(--muted);margin:0;max-width:52ch}
+
+.steps{display:grid;gap:14px}
+.step{
+  background:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px;
+}
+.step .n{
+  font-family:"Bebas Neue","Arial Narrow",Impact,sans-serif;font-size:1.5rem;
+  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+  margin:0 0 13px;color:#04180c;background:var(--grass);
+}
+.step:nth-child(2) .n{background:var(--gold)}
+.step:nth-child(3) .n{background:var(--kit-blue);color:#fff}
+.step h3{font-size:1.16rem;margin:0 0 6px;font-weight:800}
+.step p{color:var(--muted);margin:0;font-size:.95rem}
+
+.shots{display:grid;gap:12px;margin-top:30px}
+.shots img{width:100%;border-radius:13px;border:1px solid var(--line)}
+
+/* ---------- closing ---------- */
+.closer{
+  text-align:center;
+  background:linear-gradient(165deg,rgba(37,211,102,.12),rgba(59,123,255,.07));
+  border:1px solid var(--line);border-radius:22px;
+  padding:42px 22px;
+}
+.closer h2{font-size:clamp(2rem,8.5vw,3.2rem);margin:0 0 10px}
+.closer p{color:var(--muted);margin:0 auto 24px;max-width:40ch}
+.closer .field{max-width:440px;margin:0 auto}
+.closer .microcopy,.closer .note{text-align:left;max-width:440px;margin-left:auto;margin-right:auto}
+
+footer{
+  padding:36px 0 46px;color:var(--muted);font-size:.85rem;
+  border-top:1px solid var(--line);margin-top:48px;
+}
+footer p{margin:0 0 6px}
+
+@media (min-width:860px){
+  .hero{padding:44px 0 20px}
+  .hero-grid{
+    grid-template-columns:1.08fr .92fr;
+    grid-template-areas:"head phone" "actions phone";
+    align-content:center;gap:0 52px;
+  }
+  .phone-col{align-self:center}
+  .phone{width:min(310px,100%)}
+  .steps{grid-template-columns:repeat(3,1fr)}
+  .shots{grid-template-columns:1fr 1fr}
+  section{padding:76px 0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand display"><span class="dot"></span> Squad Rush</div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <div class="hero">
+    <div class="hero-grid">
+
+      <div class="hero-head">
+        <span class="eyebrow">Coming soon</span>
+        <h1 class="display">Pick a gate.<br>Build your squad.<br><span class="hl">Score.</span></h1>
+      </div>
+
+      <div class="phone-col">
+        <div class="phone">
+          <video
+            id="hero-video"
+            src="hero-loop.mp4"
+            poster="hero-poster.jpg"
+            muted loop playsinline autoplay preload="metadata"
+            aria-label="Squad Rush gameplay: a player runs through a +4 gate, the squad grows to five, and they score."
+          ></video>
+          <button class="sound-btn" id="sound-btn" type="button" aria-label="Turn sound on">🔇</button>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <p class="lede">
+          Grab every player you can, then turn your squad into a goal before the
+          defence catches up. One thumb. Twenty seconds a run.
+        </p>
+
+        <form class="signup" id="form-top" novalidate>
+          <div class="field">
+            <label class="visually-hidden" for="email-top" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Email address</label>
+            <input type="email" id="email-top" name="email" placeholder="you@email.com" autocomplete="email" required>
+            <button class="btn" type="submit">Notify me</button>
+          </div>
+          <p class="microcopy">Get a message the day it launches. No spam, unsubscribe anytime.</p>
+          <p class="note" id="note-top" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="stores">
+          <span class="store">📱 iOS — coming soon</span>
+          <span class="store">🤖 Android — coming soon</span>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- ================= HOW IT PLAYS ================= -->
+  <section>
+    <div class="sec-head">
+      <h2 class="display">How it plays</h2>
+      <p>Easy to pick up, hard to finish with a full squad.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Choose your gate</h3>
+        <p>Every run splits. The bigger multiplier is always the harder line to take — go greedy, or go safe.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Keep the squad alive</h3>
+        <p>Defenders pull your players off one by one. Pass around them and you arrive mob-handed.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Finish it</h3>
+        <p>Every player left is another shot at goal. Arrive alone and it's just you against the keeper.</p>
+      </div>
+    </div>
+
+    <div class="shots">
+      <img src="storyboard-0-12s.jpg" alt="Gameplay: the player picks between a +2 and a +4 gate, then builds a squad of five." loading="lazy" decoding="async">
+      <img src="storyboard-13-20s.jpg" alt="Gameplay: the shot beats the keeper and the squad celebrates." loading="lazy" decoding="async">
+    </div>
+  </section>
+
+  <!-- ================= CLOSER ================= -->
+  <section>
+    <div class="closer">
+      <h2 class="display">Be first on the pitch</h2>
+      <p>Drop your email and we'll tell you the moment it's live.</p>
+
+      <form class="signup" id="form-bottom" novalidate>
+        <div class="field">
+          <label for="email-bottom" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Email address</label>
+          <input type="email" id="email-bottom" name="email" placeholder="you@email.com" autocomplete="email" required>
+          <button class="btn" type="submit">Join the waitlist</button>
+        </div>
+        <p class="microcopy">No spam, unsubscribe anytime.</p>
+        <p class="note" id="note-bottom" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <p>Squad Rush — in development.</p>
+    <p>Not affiliated with any real club, league or competition.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------
+     CONFIG
+
+     WAITLIST_ENDPOINT must be set before sending any paid traffic here.
+     While it is null, the form deliberately does NOT claim to have saved
+     anything — it tells the visitor the waitlist isn't open yet, so the
+     page never promises a signup it cannot honour.
+
+     To switch it on, set the URL of a form backend that accepts a POST
+     with JSON {email, source, ts}. Formspree, Formspark, Basin, a Supabase
+     edge function or any serverless handler all work:
+
+         WAITLIST_ENDPOINT: "https://formspree.io/f/xxxxxxxx"
+     ------------------------------------------------------------------ */
+  var CONFIG = {
+    WAITLIST_ENDPOINT: null,
+    SOURCE: "arcade-football-lp"
+  };
+
+  /* ---------- lightweight event tracking ----------
+     Forwards to Meta Pixel / GA4 if either is present, otherwise no-ops.
+     Drop a pixel snippet into <head> and these start reporting with no
+     further changes. */
+  function track(name, params) {
+    params = params || {};
+    try { if (typeof window.fbq === "function") window.fbq("trackCustom", name, params); } catch (e) {}
+    try { if (typeof window.gtag === "function") window.gtag("event", name, params); } catch (e) {}
+    try {
+      if (Array.isArray(window.dataLayer)) window.dataLayer.push(Object.assign({ event: name }, params));
+    } catch (e) {}
+  }
+
+  /* ---------- hero video sound toggle ---------- */
+  var video = document.getElementById("hero-video");
+  var soundBtn = document.getElementById("sound-btn");
+
+  if (video && soundBtn) {
+    soundBtn.addEventListener("click", function () {
+      video.muted = !video.muted;
+      soundBtn.textContent = video.muted ? "🔇" : "🔊";
+      soundBtn.setAttribute("aria-label", video.muted ? "Turn sound on" : "Turn sound off");
+      if (!video.muted) {
+        video.play().catch(function () {});
+        track("VideoUnmute", { source: CONFIG.SOURCE });
+      }
+    });
+
+    // Some mobile browsers block autoplay until the user interacts.
+    video.play().catch(function () {});
+
+    var counted = false;
+    video.addEventListener("timeupdate", function () {
+      if (!counted && video.currentTime > 3) {
+        counted = true;
+        track("VideoWatch3s", { source: CONFIG.SOURCE });
+      }
+    });
+  }
+
+  /* ---------- waitlist forms ---------- */
+  function showNote(el, kind, message) {
+    el.className = "note show " + kind;
+    el.textContent = message;
+  }
+
+  function wireForm(formId, noteId, position) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+
+    var note = document.getElementById(noteId);
+    var input = form.querySelector('input[type="email"]');
+    var button = form.querySelector("button");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      var email = (input.value || "").trim();
+      if (!email || !input.checkValidity()) {
+        showNote(note, "err", "Please enter a valid email address.");
+        input.focus();
+        return;
+      }
+
+      track("WaitlistSubmit", { source: CONFIG.SOURCE, position: position });
+
+      if (!CONFIG.WAITLIST_ENDPOINT) {
+        showNote(note, "warn", "The waitlist isn't open yet — nothing was saved. Please check back shortly.");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Sending…";
+
+      fetch(CONFIG.WAITLIST_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ email: email, source: CONFIG.SOURCE, position: position, ts: new Date().toISOString() })
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Request failed with status " + response.status);
+          showNote(note, "ok", "You're on the list. We'll email you at launch.");
+          track("WaitlistSuccess", { source: CONFIG.SOURCE, position: position });
+          form.reset();
+        })
+        .catch(function () {
+          showNote(note, "err", "Something went wrong — please try again in a moment.");
+          track("WaitlistError", { source: CONFIG.SOURCE, position: position });
+        })
+        .then(function () {
+          button.disabled = false;
+          button.textContent = position === "hero" ? "Notify me" : "Join the waitlist";
+        });
+    });
+  }
+
+  wireForm("form-top", "note-top", "hero");
+  wireForm("form-bottom", "note-bottom", "closer");
+})();
+</script>
+</body>
+</html>
