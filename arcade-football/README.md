@@ -63,7 +63,7 @@ Checked against the brief rather than assumed from job status:
 
 # Waitlist Landing Page
 
-`index.html` — a mobile-first landing page for the concept, live at
+`index.html` — a mobile-first landing page for **Goal Rush**, live at
 <https://squad-rush.milton-steve.workers.dev>. Built as the destination for a
 paid creative test: run the video as an ad, measure what it costs to get a
 click and a signup, and only build the game if those numbers hold up.
@@ -163,3 +163,54 @@ paths return a real 404 via `404.html`. `cambridgetech.ai` instead returns
 200 with its homepage for any unknown path, which during a paid test would
 silently absorb a broken ad link and make the funnel look merely poor rather
 than broken.
+
+---
+
+# Concept rework: gates out, streak in
+
+The original concept (gates that multiply your squad, then a scripted move to
+goal) was dropped. Two problems with it:
+
+1. **The squad was an abstraction between the player and the goal.** The
+   mechanic is borrowed from crowd runners like Count Masters, where more units
+   wins the fight. Football already has the clearest win condition in sport —
+   score — so deferring it behind a collection layer is noise.
+2. **The player barely played.** Across twenty seconds the only input was one
+   gate choice. The passing, the defender and the finish were all the game
+   playing itself.
+
+## Goal Rush
+
+Run at goal, weave past defenders, swipe to score, go again faster. The loop is
+8–12 seconds:
+
+| Step | Input |
+|---|---|
+| Auto-run at goal from the halfway line | none |
+| Defenders converge | **drag** thumb left/right to weave |
+| Cross into the box, time slows | none |
+| Strike | **swipe** — arc sets placement and curve |
+| Keeper dives; goal → streak +1 and pace increases | none |
+
+Two inputs, one thumb, no buttons. Both idioms are proven: the weave is Subway
+Surfers, the swipe-to-place finish is Score! Hero. Every run ends with the
+player taking a shot, so nothing is a cutscene.
+
+The streak carries the difficulty curve and the monetisation: each goal adds
+pace and a defender, one mistake ends the run, and "continue your streak" on a
+rewarded video is the highest-converting placement in score-attack games.
+
+## Creative status
+
+`hero-loop.mp4` is the master trimmed to start at 4.6s, which cuts the gate
+sequence. What remains — run, defenders, box, strike, keeper dive, goal,
+celebration — reads correctly for the new concept, and the on-screen counter
+now reads as a streak.
+
+`arcade-football-20s-9x16.mp4` (the master) **still opens on the gates** and no
+longer matches the concept. It should not be used as ad creative as-is.
+
+A purpose-built creative for the ad test still needs generating: it should show
+a thumb dragging and swiping, and the slow-motion aim before the strike, so a
+viewer can see it is playable. Cost is roughly 180 credits on `seedance_2_5`
+at 20s/1080p.
