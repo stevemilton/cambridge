@@ -63,8 +63,8 @@ Checked against the brief rather than assumed from job status:
 
 # Waitlist Landing Page
 
-`index.html` — a mobile-first landing page for the concept, published at
-<https://cambridgetech.ai/arcade-football/>. Built as the destination for a
+`index.html` — a mobile-first landing page for the concept, live at
+<https://squad-rush.milton-steve.workers.dev>. Built as the destination for a
 paid creative test: run the video as an ad, measure what it costs to get a
 click and a signup, and only build the game if those numbers hold up.
 
@@ -123,3 +123,43 @@ Rendered in Chromium at 360 / 390 / 768 / 1280px: no horizontal overflow at
 any width, no JavaScript errors, and the gameplay video sits within the first
 screen on mobile — traffic arrives from a video ad, so the footage has to land
 before the fold rather than below the copy.
+
+## Where this is hosted, and why not on cambridgetech.ai
+
+The landing page is deployed to its own Cloudflare project, `squad-rush`,
+**not** to `cambridgetech.ai/arcade-football/`. That was deliberate.
+
+`cambridgetech.ai` is served by the Cloudflare Pages project `cambridgetech`,
+which is **direct-upload with no Git connection** (`source repo: None`) and was
+last deployed on 8 July 2026. It does not build from this repo, which is why
+everything merged here since then is absent from the live site — the repo's
+`.github/workflows/deploy.yml` publishes to GitHub Pages, which nothing points
+at.
+
+More importantly, the live site has **diverged from this repo**, and the live
+copy is ahead:
+
+| | Live `cambridgetech.ai` | This repo |
+|---|---|---|
+| Contact form handler | Posts to `/api/contact`, a Pages Function that emails the team | Absent |
+| Form field `name` attributes | Present | Absent |
+| Honeypot spam trap | Present | Absent |
+| `meal-plan/index.html` | One version | A different version |
+| Team card (CTO) | Absent | Present |
+
+So deploying this repo over that project would delete a working contact form
+and its server-side function, reopen the form to spam, and publish a team
+change that isn't live. That is why the landing page went to a separate
+project instead.
+
+**This divergence is unresolved.** The live site contains code — including a
+Pages Function with a server-side email destination — that exists nowhere in
+version control. It cannot be rebuilt from this repo if it is ever lost.
+
+## 404 handling
+
+The `squad-rush` project sets `not_found_handling: "404-page"`, so unknown
+paths return a real 404 via `404.html`. `cambridgetech.ai` instead returns
+200 with its homepage for any unknown path, which during a paid test would
+silently absorb a broken ad link and make the funnel look merely poor rather
+than broken.
