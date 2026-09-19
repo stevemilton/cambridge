@@ -3,35 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Goal Rush</title>
-<meta name="description" content="Dodge. Swipe. Score. A fast one-thumb arcade football game — coming soon to iOS and Android.">
+<title>Valhalla FC</title>
+<meta name="description" content="Dodge. Swipe. Score. A fast one-thumb Viking football game — coming soon to iOS and Android.">
 
-<meta property="og:title" content="Goal Rush — dodge, swipe, score">
-<meta property="og:description" content="One thumb. Weave through the defence and swipe to score. Coming soon to iOS and Android.">
+<meta property="og:title" content="Valhalla FC — dodge, swipe, score">
+<meta property="og:description" content="One thumb. Weave through the shieldwall and swipe to score. Coming soon to iOS and Android.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://squad-rush.milton-steve.workers.dev/hero-poster.jpg">
+<meta property="og:image" content="https://squad-rush.milton-steve.workers.dev/viking-style/keyart.jpg">
 <meta name="twitter:card" content="summary_large_image">
 
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
+/* ============================================================
+   VALHALLA FC — Viking theme, premium-casual finish.
+
+   The Norse flavour lives in the ORNAMENT (carved timber, hammered
+   bronze, knotwork, torchlight), never in the letterforms. Fantasy
+   display faces read as costume and cheapen the whole thing; a warm
+   rounded face is what makes premium-casual puzzle games feel
+   expensive, so that is what carries the type.
+   ============================================================ */
 :root{
   color-scheme: dark;
-  --bg:#060b14;
-  --bg-2:#0b1424;
-  --surface:#111d31;
-  --line:rgba(255,255,255,.12);
-  --text:#eef4ff;
-  --muted:#93a4bf;
-  --grass:#25d366;
-  --grass-deep:#12a750;
-  --gold:#ffc531;
-  --kit-blue:#3b7bff;
-  --kit-red:#e5484d;
-  --radius:16px;
+
+  /* base — fjord night */
+  --night:#0b1728;
+  --night-2:#122542;
+
+  /* carved timber surfaces */
+  --timber:#2c1a0f;
+  --timber-2:#1a0f08;
+
+  /* hammered bronze framing */
+  --bronze:#a9763c;
+  --bronze-hi:#d9a45f;
+  --bronze-lo:#6d4622;
+
+  /* torch gold — the reward colour, used sparingly */
+  --gold:#f2b13c;
+  --gold-hi:#ffd479;
+  --gold-lo:#d98f22;
+
+  --ember:#e2662c;
+  --blood:#a8302b;
+
+  --frost:#eaf2fa;
+  --muted:#9db0c9;
+
   --maxw:1080px;
 }
 
@@ -39,195 +61,207 @@
 html,body{margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{
-  background:var(--bg);
-  color:var(--text);
+  background:var(--night);
+  color:var(--frost);
   font-family:"Outfit",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   line-height:1.55;
   overflow-x:hidden;
 }
-img,video{max-width:100%;display:block}
-a{color:inherit}
+img{max-width:100%;display:block}
 
 .display{
-  /* Condensed fallbacks matter: the sizes below are tuned for a narrow
-     face, and a wide fallback would otherwise overflow the headline. */
-  font-family:"Bebas Neue","Haettenschweiler","Arial Narrow",Impact,
-              system-ui,sans-serif;
-  font-weight:400;
-  letter-spacing:.02em;
-  line-height:.95;
-  text-transform:uppercase;
+  font-family:"Fredoka","Outfit",system-ui,sans-serif;
+  font-weight:700;
+  letter-spacing:-.01em;
+  line-height:1.02;
 }
 
 .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 16px}
 
-/* ---------- glow backdrop ---------- */
+/* ---------- aurora backdrop ---------- */
 .backdrop{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.backdrop::before,.backdrop::after{
-  content:"";position:absolute;border-radius:50%;filter:blur(90px);opacity:.5
-}
+.backdrop::before,.backdrop::after{content:"";position:absolute;border-radius:50%;filter:blur(100px)}
 .backdrop::before{
-  width:70vw;height:70vw;max-width:620px;max-height:620px;
-  top:-18vw;left:-14vw;background:radial-gradient(circle,rgba(37,211,102,.55),transparent 70%)
+  width:90vw;height:70vw;max-width:760px;max-height:560px;
+  top:-16vw;left:-22vw;opacity:.45;
+  background:radial-gradient(circle,rgba(54,214,150,.55),transparent 70%)
 }
 .backdrop::after{
-  width:64vw;height:64vw;max-width:560px;max-height:560px;
-  top:22vh;right:-20vw;background:radial-gradient(circle,rgba(59,123,255,.42),transparent 70%)
+  width:80vw;height:70vw;max-width:680px;max-height:560px;
+  top:26vh;right:-26vw;opacity:.4;
+  background:radial-gradient(circle,rgba(226,102,44,.5),transparent 70%)
+}
+
+/* ---------- shared: carved timber panel ---------- */
+.panel{
+  background:linear-gradient(180deg,var(--timber),var(--timber-2));
+  border:2px solid var(--bronze);
+  border-radius:18px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.13),
+    inset 0 -3px 0 rgba(0,0,0,.35),
+    0 16px 30px -14px rgba(0,0,0,.85);
 }
 
 /* ---------- header ---------- */
-header{padding:22px 0 8px}
-.brand{display:flex;align-items:center;gap:9px;font-size:1.32rem}
-.brand .dot{
-  width:11px;height:11px;border-radius:50%;background:var(--grass);
-  box-shadow:0 0 14px var(--grass);flex:none
+header{padding:20px 0 6px}
+.brand{display:flex;align-items:center;gap:11px;font-size:1.3rem}
+.crest{
+  width:34px;height:34px;flex:none;border-radius:50%;
+  display:grid;place-items:center;font-size:1rem;
+  background:radial-gradient(circle at 34% 28%,var(--bronze-hi),var(--bronze-lo));
+  border:2px solid var(--gold);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),0 4px 12px -4px rgba(0,0,0,.8);
 }
 
 /* ---------- hero ---------- */
-.hero{padding:18px 0 8px}
-/* Mobile order: headline -> gameplay video -> pitch + form.
-   Traffic arrives from a video ad, so the footage must land early. */
-.hero-grid{
-  display:grid;gap:22px;
-  grid-template-areas:"head" "phone" "actions";
-}
+.hero{padding:16px 0 6px}
+.hero-grid{display:grid;gap:22px;grid-template-areas:"head" "art" "actions"}
 .hero-head{grid-area:head}
-.phone-col{grid-area:phone}
+.art-col{grid-area:art}
 .hero-actions{grid-area:actions}
 
 .eyebrow{
-  display:inline-flex;align-items:center;gap:7px;
-  font-size:.72rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--grass);
-  background:rgba(37,211,102,.1);
-  border:1px solid rgba(37,211,102,.28);
-  border-radius:999px;padding:6px 13px;margin:0 0 16px
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);
+  background:rgba(242,177,60,.1);
+  border:1px solid rgba(242,177,60,.38);
+  border-radius:999px;padding:6px 14px;margin:0 0 16px
 }
-h1{font-size:clamp(2.6rem,9.5vw,4.6rem);margin:0 0 14px}
-h1 .hl{color:var(--gold)}
-.lede{font-size:clamp(.98rem,3.9vw,1.2rem);color:var(--muted);margin:0 0 22px;max-width:38ch}
+h1{font-size:clamp(2.5rem,10vw,4.4rem);margin:0 0 14px}
+h1 .hl{color:var(--gold);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.lede{font-size:clamp(.98rem,3.9vw,1.18rem);color:var(--muted);margin:0 0 22px;max-width:40ch}
 
-/* phone frame */
-.phone{
-  width:min(280px,76vw);margin:0 auto;position:relative;
-  border-radius:34px;padding:9px;
-  background:linear-gradient(170deg,#25334c,#0d1626);
-  box-shadow:0 26px 60px -18px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.07);
+/* key art in a carved frame */
+.art-frame{
+  padding:9px;border-radius:22px;
+  background:linear-gradient(170deg,#41291a,#1b1009);
+  border:2px solid var(--bronze);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.16),
+    0 24px 46px -18px rgba(0,0,0,.9);
+  max-width:420px;margin:0 auto;
 }
-.phone video{
-  width:100%;aspect-ratio:9/16;object-fit:cover;
-  border-radius:26px;background:#0a1220;
-}
-.sound-btn{
-  position:absolute;right:16px;bottom:16px;
-  width:42px;height:42px;border-radius:50%;
-  border:1px solid rgba(255,255,255,.28);
-  background:rgba(6,11,20,.72);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  color:#fff;font-size:1.05rem;cursor:pointer;
-  display:grid;place-items:center;
-  transition:transform .15s ease,background .15s ease;
-}
-.sound-btn:hover{background:rgba(6,11,20,.92);transform:scale(1.06)}
-.sound-btn:focus-visible{outline:2px solid var(--grass);outline-offset:3px}
+.art-frame img{border-radius:15px;width:100%}
 
 /* ---------- waitlist ---------- */
-.signup{margin-top:4px}
-.field{display:flex;gap:9px;flex-wrap:wrap}
+.field{display:flex;gap:10px;flex-wrap:wrap}
 input[type="email"]{
   flex:1 1 210px;min-width:0;
-  padding:15px 17px;font:inherit;font-size:1rem;color:var(--text);
-  background:var(--surface);
-  border:1px solid var(--line);border-radius:12px;
+  padding:15px 17px;font:inherit;font-size:1rem;color:var(--frost);
+  background:rgba(4,10,20,.6);
+  border:2px solid var(--bronze-lo);border-radius:13px;
 }
-input[type="email"]::placeholder{color:#63748f}
-input[type="email"]:focus{outline:none;border-color:var(--grass);box-shadow:0 0 0 3px rgba(37,211,102,.2)}
+input[type="email"]::placeholder{color:#6f829c}
+input[type="email"]:focus{
+  outline:none;border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(242,177,60,.22)
+}
 .btn{
-  flex:0 0 auto;padding:15px 26px;font:inherit;font-weight:800;font-size:1rem;
-  color:#04180c;cursor:pointer;white-space:nowrap;
-  background:linear-gradient(180deg,var(--grass),var(--grass-deep));
-  border:0;border-radius:12px;
-  box-shadow:0 8px 22px -8px rgba(37,211,102,.75);
+  flex:0 0 auto;padding:15px 28px;cursor:pointer;white-space:nowrap;
+  font-family:"Fredoka","Outfit",sans-serif;font-weight:600;font-size:1rem;
+  color:#3a2008;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 46%,var(--gold-lo));
+  border:2px solid #8a5a22;border-radius:13px;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.6),
+    inset 0 -3px 0 rgba(0,0,0,.22),
+    0 9px 20px -7px rgba(242,177,60,.55);
   transition:transform .13s ease,filter .13s ease;
 }
-.btn:hover{transform:translateY(-1px);filter:brightness(1.07)}
-.btn:active{transform:translateY(0)}
-.btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--frost);outline-offset:3px}
 .btn[disabled]{opacity:.6;cursor:default;transform:none}
 .microcopy{font-size:.83rem;color:var(--muted);margin:11px 0 0}
 
-.note{
-  margin:13px 0 0;padding:12px 14px;border-radius:11px;font-size:.88rem;
-  display:none;
-}
+.note{margin:13px 0 0;padding:12px 14px;border-radius:11px;font-size:.88rem;display:none}
 .note.show{display:block}
-.note.ok{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.35);color:#a9f0c6}
-.note.warn{background:rgba(255,197,49,.1);border:1px solid rgba(255,197,49,.35);color:#ffdd8f}
-.note.err{background:rgba(229,72,77,.11);border:1px solid rgba(229,72,77,.36);color:#ffb3b5}
+.note.ok{background:rgba(54,214,150,.12);border:1px solid rgba(54,214,150,.4);color:#a4ebcb}
+.note.warn{background:rgba(242,177,60,.1);border:1px solid rgba(242,177,60,.4);color:#ffdd99}
+.note.err{background:rgba(168,48,43,.16);border:1px solid rgba(168,48,43,.5);color:#ffb0ac}
 
 .stores{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0 0}
 .store{
   display:inline-flex;align-items:center;gap:8px;
-  padding:9px 15px;border-radius:11px;
-  background:rgba(255,255,255,.05);border:1px solid var(--line);
-  font-size:.82rem;color:var(--muted);
+  padding:9px 15px;border-radius:11px;font-size:.82rem;color:var(--muted);
+  background:rgba(255,255,255,.04);border:1px solid rgba(169,118,60,.45);
 }
 
-/* ---------- how it plays ---------- */
-section{padding:54px 0}
-.sec-head{margin:0 0 26px}
-.sec-head h2{font-size:clamp(1.85rem,7.5vw,2.9rem);margin:0 0 8px}
+/* ---------- sections ---------- */
+section{padding:52px 0}
+.sec-head{margin:0 0 24px}
+.sec-head h2{font-size:clamp(1.8rem,7vw,2.7rem);margin:0 0 8px;color:var(--gold)}
 .sec-head p{color:var(--muted);margin:0;max-width:52ch}
 
+/* knotwork divider */
+.knot{
+  height:14px;margin:0 0 22px;
+  background:
+    radial-gradient(circle at 50% 50%,var(--gold) 0 3px,transparent 4px),
+    linear-gradient(90deg,transparent,var(--bronze) 18%,var(--bronze) 82%,transparent);
+  background-size:100% 100%,100% 2px;
+  background-position:center,center;
+  background-repeat:no-repeat;
+}
+
 .steps{display:grid;gap:14px}
-.step{
-  background:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
-  border:1px solid var(--line);border-radius:var(--radius);
-  padding:22px;
-}
+.step{padding:24px 22px}
 .step .n{
-  font-family:"Bebas Neue","Arial Narrow",Impact,sans-serif;font-size:1.5rem;
-  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
-  margin:0 0 13px;color:#04180c;background:var(--grass);
+  width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;margin:0 0 14px;
+  font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.25rem;color:#2a1706;
+  background:radial-gradient(circle at 34% 28%,var(--bronze-hi),var(--bronze-lo));
+  border:2px solid var(--gold);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45);
 }
-.step:nth-child(2) .n{background:var(--gold)}
-.step:nth-child(3) .n{background:var(--kit-blue);color:#fff}
-.step h3{font-size:1.16rem;margin:0 0 6px;font-weight:800}
+.step h3{font-family:"Fredoka",sans-serif;font-weight:600;font-size:1.16rem;margin:0 0 6px}
 .step p{color:var(--muted);margin:0;font-size:.95rem}
 
-.shots{display:grid;gap:12px;margin-top:30px}
-.shots img{width:100%;border-radius:13px;border:1px solid var(--line)}
-
-/* ---------- closing ---------- */
-.closer{
-  text-align:center;
-  background:linear-gradient(165deg,rgba(37,211,102,.12),rgba(59,123,255,.07));
-  border:1px solid var(--line);border-radius:22px;
-  padding:42px 22px;
+.shots{display:grid;gap:14px;margin-top:26px}
+.shot{padding:8px;border-radius:18px}
+.shot img{border-radius:12px;width:100%}
+.shot figcaption{
+  color:var(--muted);font-size:.83rem;padding:10px 8px 4px;margin:0;text-align:center;
 }
-.closer h2{font-size:clamp(2rem,8.5vw,3.2rem);margin:0 0 10px}
+
+/* ---------- closer ---------- */
+.closer{text-align:center;padding:42px 22px;border-radius:22px}
+.closer h2{font-size:clamp(1.9rem,8vw,3rem);margin:0 0 10px;color:var(--gold)}
 .closer p{color:var(--muted);margin:0 auto 24px;max-width:40ch}
 .closer .field{max-width:440px;margin:0 auto}
 .closer .microcopy,.closer .note{text-align:left;max-width:440px;margin-left:auto;margin-right:auto}
 
 footer{
-  padding:36px 0 46px;color:var(--muted);font-size:.85rem;
-  border-top:1px solid var(--line);margin-top:48px;
+  padding:34px 0 46px;color:var(--muted);font-size:.85rem;
+  border-top:1px solid rgba(169,118,60,.35);margin-top:46px;
 }
 footer p{margin:0 0 6px}
 
-@media (min-width:860px){
-  .hero{padding:44px 0 20px}
+@media (min-width:880px){
+  .hero{padding:40px 0 18px}
   .hero-grid{
-    grid-template-columns:1.08fr .92fr;
-    grid-template-areas:"head phone" "actions phone";
-    align-content:center;gap:0 52px;
+    grid-template-columns:1.05fr .95fr;
+    grid-template-areas:"head art" "actions art";
+    align-content:center;gap:0 50px;
   }
-  .phone-col{align-self:center}
-  .phone{width:min(310px,100%)}
+  /* The key art is portrait and tall, so it sets the height of both grid
+     rows. Left the default, that stretches the two text rows apart and
+     leaves a dead gap mid-column — so pull them together at the seam and
+     cap the art's height. */
+  .hero-head{align-self:end;padding-bottom:20px}
+  .hero-actions{align-self:start}
+  .art-col{align-self:center}
+  /* Portrait art at full height makes the hero ~900px tall and pushes the
+     copy off the fold. Crop it to a sane height, biased to the top so the
+     captain's face and the aurora survive the crop. */
+  .art-frame{max-width:380px}
+  .art-frame img{max-height:540px;object-fit:cover;object-position:center 18%}
   .steps{grid-template-columns:repeat(3,1fr)}
   .shots{grid-template-columns:1fr 1fr}
-  section{padding:76px 0}
+  section{padding:74px 0}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -241,7 +275,7 @@ footer p{margin:0 0 6px}
 <div class="wrap">
 
   <header>
-    <div class="brand display"><span class="dot"></span> Goal Rush</div>
+    <div class="brand display"><span class="crest" aria-hidden="true">🛡️</span> Valhalla FC</div>
   </header>
 
   <!-- ================= HERO ================= -->
@@ -253,28 +287,23 @@ footer p{margin:0 0 6px}
         <h1 class="display">Dodge.<br>Swipe.<br><span class="hl">Score.</span></h1>
       </div>
 
-      <div class="phone-col">
-        <div class="phone">
-          <video
-            id="hero-video"
-            src="hero-loop.mp4"
-            poster="hero-poster.jpg"
-            muted loop playsinline autoplay preload="metadata"
-            aria-label="Goal Rush gameplay: an attacker runs at goal, beats the defenders, and strikes past the keeper."
-          ></video>
-          <button class="sound-btn" id="sound-btn" type="button" aria-label="Turn sound on">🔇</button>
+      <div class="art-col">
+        <div class="art-frame">
+          <img src="viking-style/keyart.jpg" width="800" height="1430"
+               alt="A grinning Viking footballer with a braided red beard rests a boot on an iron-banded ball, torch-lit longhouse stands and an aurora behind him."
+               fetchpriority="high" decoding="async">
         </div>
       </div>
 
       <div class="hero-actions">
         <p class="lede">
-          One thumb. Drag to weave through the defence, swipe to bury it.
+          One thumb. Weave through the shieldwall, then swipe to bury it.
           Every goal makes the next one faster — how long can you keep the streak alive?
         </p>
 
         <form class="signup" id="form-top" novalidate>
           <div class="field">
-            <label class="visually-hidden" for="email-top" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Email address</label>
+            <label for="email-top" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Email address</label>
             <input type="email" id="email-top" name="email" placeholder="you@email.com" autocomplete="email" required>
             <button class="btn" type="submit">Notify me</button>
           </div>
@@ -288,7 +317,6 @@ footer p{margin:0 0 6px}
         </div>
       </div>
 
-
     </div>
   </div>
 
@@ -298,35 +326,55 @@ footer p{margin:0 0 6px}
       <h2 class="display">How it plays</h2>
       <p>Two inputs. One thumb. About ten seconds a goal.</p>
     </div>
+    <div class="knot" aria-hidden="true"></div>
 
     <div class="steps">
-      <div class="step">
+      <div class="step panel">
         <div class="n">1</div>
-        <h3>Weave through</h3>
+        <h3>Beat the shieldwall</h3>
         <p>You run at goal automatically. Drag your thumb left and right to slip past the defenders closing in. No buttons, no stick.</p>
       </div>
-      <div class="step">
+      <div class="step panel">
         <div class="n">2</div>
         <h3>Swipe to strike</h3>
         <p>Reach the box and time drops into slow motion. The arc of your swipe sets the placement and the curve — the keeper reads the obvious ones.</p>
       </div>
-      <div class="step">
+      <div class="step panel">
         <div class="n">3</div>
         <h3>Keep the streak</h3>
         <p>Every goal speeds the game up and puts another defender in your way. Your streak is your score. One mistake ends it.</p>
       </div>
     </div>
+  </section>
+
+  <!-- ================= THE LOOK ================= -->
+  <section>
+    <div class="sec-head">
+      <h2 class="display">Fire, frost and football</h2>
+      <p>Longship goalposts, braziers for floodlights, and an aurora over the fjord.</p>
+    </div>
+    <div class="knot" aria-hidden="true"></div>
 
     <div class="shots">
-      <img src="storyboard-0-12s.jpg" alt="Gameplay: the attacker runs at goal with defenders closing in." loading="lazy" decoding="async">
-      <img src="storyboard-13-20s.jpg" alt="Gameplay: the shot beats the keeper and the goal is celebrated." loading="lazy" decoding="async">
+      <figure class="shot panel" style="margin:0">
+        <img src="viking-style/gameplay.jpg" width="720" height="1286"
+             alt="In-game view: a blue-clad Viking runs at a carved timber goal flanked by longship prows while two red defenders close in."
+             loading="lazy" decoding="async">
+        <figcaption>Carved goals, torchlit stands, frost on the grass.</figcaption>
+      </figure>
+      <figure class="shot panel" style="margin:0">
+        <img src="viking-style/character.jpg" width="700" height="700"
+             alt="Character art: a broad, grinning Viking footballer in a blue kit with gold knotwork trim, holding an iron-banded ball."
+             loading="lazy" decoding="async">
+        <figcaption>Your captain. Rather better with his feet than his axe.</figcaption>
+      </figure>
     </div>
   </section>
 
   <!-- ================= CLOSER ================= -->
   <section>
-    <div class="closer">
-      <h2 class="display">Be first on the pitch</h2>
+    <div class="closer panel">
+      <h2 class="display">Take your place</h2>
       <p>Drop your email and we'll tell you the moment it's live.</p>
 
       <form class="signup" id="form-bottom" novalidate>
@@ -342,7 +390,7 @@ footer p{margin:0 0 6px}
   </section>
 
   <footer>
-    <p>Goal Rush — in development.</p>
+    <p>Valhalla FC — in development.</p>
     <p>Not affiliated with any real club, league or competition.</p>
   </footer>
 
@@ -361,14 +409,14 @@ footer p{margin:0 0 6px}
      page never promises a signup it cannot honour.
 
      To switch it on, set the URL of a form backend that accepts a POST
-     with JSON {email, source, ts}. Formspree, Formspark, Basin, a Supabase
-     edge function or any serverless handler all work:
+     with JSON {email, source, position, ts}. Formspree, Formspark, Basin,
+     a Supabase edge function or any serverless handler all work:
 
          WAITLIST_ENDPOINT: "https://formspree.io/f/xxxxxxxx"
      ------------------------------------------------------------------ */
   var CONFIG = {
     WAITLIST_ENDPOINT: null,
-    SOURCE: "arcade-football-lp"
+    SOURCE: "valhalla-fc-lp"
   };
 
   /* ---------- lightweight event tracking ----------
@@ -382,33 +430,6 @@ footer p{margin:0 0 6px}
     try {
       if (Array.isArray(window.dataLayer)) window.dataLayer.push(Object.assign({ event: name }, params));
     } catch (e) {}
-  }
-
-  /* ---------- hero video sound toggle ---------- */
-  var video = document.getElementById("hero-video");
-  var soundBtn = document.getElementById("sound-btn");
-
-  if (video && soundBtn) {
-    soundBtn.addEventListener("click", function () {
-      video.muted = !video.muted;
-      soundBtn.textContent = video.muted ? "🔇" : "🔊";
-      soundBtn.setAttribute("aria-label", video.muted ? "Turn sound on" : "Turn sound off");
-      if (!video.muted) {
-        video.play().catch(function () {});
-        track("VideoUnmute", { source: CONFIG.SOURCE });
-      }
-    });
-
-    // Some mobile browsers block autoplay until the user interacts.
-    video.play().catch(function () {});
-
-    var counted = false;
-    video.addEventListener("timeupdate", function () {
-      if (!counted && video.currentTime > 3) {
-        counted = true;
-        track("VideoWatch3s", { source: CONFIG.SOURCE });
-      }
-    });
   }
 
   /* ---------- waitlist forms ---------- */

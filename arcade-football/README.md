@@ -214,3 +214,78 @@ A purpose-built creative for the ad test still needs generating: it should show
 a thumb dragging and swiping, and the slow-motion aim before the strike, so a
 viewer can see it is playable. Cost is roughly 180 credits on `seedance_2_5`
 at 20s/1080p.
+
+---
+
+# Art direction: Viking × premium-casual
+
+The arcade look (bright plastic toys, vivid green pitch, modern floodlit
+stadium) was replaced with a Viking theme carrying a premium-casual finish —
+the Royal Match school of mobile art, where polish is the product.
+
+## The rule that governs everything
+
+**Norse flavour lives in the ornament, never in the letterforms.** Carved
+timber, hammered bronze, knotwork, torchlight, longship prows. The type stays
+a warm rounded face (Fredoka). Fantasy display fonts read as costume and make
+a game look cheap; the premium-casual titles this borrows from all use
+friendly rounded type and put their theme entirely into the frames, buttons
+and props. That contrast is the whole trick.
+
+Second rule: **warm, never grim.** Every surface carries a highlight, nothing
+is muddy, gold is reserved for reward. It should look expensive.
+
+## Palette
+
+| Token | Hex | Use |
+|---|---|---|
+| `--night` | `#0b1728` | Fjord-night base |
+| `--timber` / `--timber-2` | `#2c1a0f` / `#1a0f08` | Carved panel surfaces |
+| `--bronze` | `#a9763c` | Hammered framing on every panel |
+| `--gold` | `#f2b13c` | Torch gold — reward colour, used sparingly |
+| `--ember` | `#e2662c` | Firelight accent |
+| `--blood` | `#a8302b` | Rival clan |
+| `--frost` | `#eaf2fa` | Body text, snow |
+
+## Component language
+
+- **Panels** — timber gradient, 2px bronze border, inset top highlight and
+  bottom shade, generous radius. This is the translation of the gold-filigree
+  frame those puzzle games wrap around everything.
+- **Buttons** — gold gradient, heavy bevel, glossy top inset, warm outer glow.
+- **Medallions** — circular hammered bronze with a gold rim, for step numbers
+  and icons.
+- **Knotwork divider** — a hairline bronze rule with a gold boss, pure CSS.
+
+## Assets
+
+Generated with `gpt_image_2_5` at 1 credit each — deliberately cheap, so the
+direction could be proven before committing ~180 credits to video.
+
+| File | Purpose |
+|---|---|
+| `viking-style/keyart.png` / `.jpg` | Hero key art; the captain |
+| `viking-style/gameplay.png` / `.jpg` | In-game view: longship goal, braziers, frost |
+| `viking-style/character.png` / `.jpg` | Character sheet for the mascot |
+| `viking-style/ui-kit.png` / `.jpg` | UI system: panels, buttons, medallions, chest |
+
+PNGs are the masters and are the only copy — regenerating costs credits and
+will not reproduce them exactly. JPEGs are the web-optimised versions the page
+actually loads.
+
+## Creative status
+
+The old `hero-loop.mp4` and `arcade-football-20s-9x16.mp4` are the **previous**
+art direction and clash with this one. They are kept as history but are no
+longer referenced by the page and are excluded from the deployment. Neither is
+usable as ad creative now.
+
+A video in this direction still needs generating before any paid test.
+
+## Checked
+
+Rendered in Chromium at 360 / 390 / 768 / 1280px: no horizontal overflow, no
+JavaScript errors. The desktop hero needed two fixes — the tall portrait key
+art was stretching the grid rows apart, leaving a dead gap between headline and
+form, and then pushing the whole hero to ~900px; the rows are now pulled
+together at the seam and the art is height-capped with a top-biased crop.
